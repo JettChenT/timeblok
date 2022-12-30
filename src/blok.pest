@@ -1,0 +1,28 @@
+SP = _{" "*}
+NUM_FIELD = {ASCII_DIGIT+}
+UNSURE = {""}
+AM = {"AM" | "am"}
+PM = {"PM" | "pm"}
+TOD = {AM | PM }
+FIELD = {NUM_FIELD | UNSURE}
+TIME = {
+    FIELD ~
+    (( ":" ~ FIELD? ~ SP ~ TOD?) |
+    (":"~FIELD)? ~TOD)
+}
+DATE = {FIELD ~ "-" ~ FIELD~ "-" ~ FIELD}
+DATETIME = {DATE ~ SP ~ TIME}
+OCCASION = {DATETIME | DATE | TIME}
+RANGE = {OCCASION ~ SP ~ "~" ~ SP ~ OCCASION}
+EVENT_HEADER = {(RANGE | OCCASION) ~ SP ~ NOTE_LINE}
+NOTE = {(!NEWLINE~ANY)+}
+NOTE_LINE = _{NOTE ~ NEWLINE?}
+EVENT = {
+    EVENT_HEADER ~ NEWLINE* ~
+    (!(EVENT_HEADER | OCCASION) ~ NOTE_LINE)*
+}
+RECORD = {EVENT | OCCASION | NOTE_LINE}
+FILE = {
+    SOI ~
+    (RECORD ~ NEWLINE*)*
+}
