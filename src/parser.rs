@@ -40,7 +40,6 @@ pub fn parse_record(pair: Pair<Rule>) -> Result<Record> {
             Ok(Record::Event(event))
         },
         Rule::OCCASION => {
-            eprintln!("Occasions!");
             let occasion = parse_occasion(record)?;
             Ok(Record::Occasion(occasion))
         },
@@ -200,7 +199,7 @@ fn parse_timerange(pair: Pair<Rule>) -> Result<Range> {
                     }))
                 },
                 None => {
-                    Ok(Range::AllDay)
+                    Ok(Range::AllDay(occasion.date.unwrap()))
                 }
             }
         },

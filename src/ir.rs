@@ -11,13 +11,20 @@ pub enum NumVal{
 pub enum Range{
     TimeRange(TimeRange),
     Duration(Duration),
-    AllDay
+    AllDay(Date)
 }
 
 #[derive(Debug)]
 pub enum ExactRange{
     TimeRange(ExactTimeRange),
-    AllDay
+    Duration(ExactDuration),
+    AllDay(ExactDate)
+}
+
+#[derive(Debug)]
+pub struct ExactDuration{
+    pub start: ExactDateTime,
+    pub duration: u64
 }
 
 #[derive(Debug)]
@@ -38,20 +45,24 @@ pub struct ExactTimeRange{
     pub end: ExactDateTime,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum TimeZoneChoice {
+    Local,
+    Utc,
+}
+
 #[derive(Default, Debug)]
 pub struct DateTime {
     pub date: Option<Date>,
     pub time: Option<Time>,
-    pub tz: Option<String>,
-    // TODO: Implement Inheritance Time
-    pub parent:Option<Box<DateTime>>
+    pub tz: Option<TimeZoneChoice>,
 }
 
 #[derive(Debug)]
 pub struct ExactDateTime{
     pub date: ExactDate,
     pub time: ExactTime,
-    pub tz: String,
+    pub tz: TimeZoneChoice,
 }
 
 #[derive(Debug)]
@@ -61,11 +72,11 @@ pub struct Date {
     pub day:NumVal
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct ExactDate{
-    pub year: i64,
-    pub month: i64,
-    pub day: i64
+    pub year: i32,
+    pub month: u32,
+    pub day: u32
 }
 
 #[derive(Debug)]
@@ -82,13 +93,14 @@ pub struct Time {
     pub tod: Option<TOD>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ExactTime{
-    pub hour: i64,
-    pub minute: i64,
-    pub second: i64
+    pub hour: u32,
+    pub minute: u32,
+    pub second: u32
 }
 
+// PERFORMANCE: Figure out how to use &str instead of String
 #[derive(Debug)]
 pub struct Event{
     pub range: Range,

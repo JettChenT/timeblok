@@ -5,7 +5,9 @@ use clap::Parser;
 pub struct Args{
     /// Path to the file to process
     #[arg(short, long)]
-    pub filepath: String,
+    pub infile: String,
+    #[arg(short, long)]
+    pub outfile: Option<String>
 }
 
 pub fn parse() -> Args {
