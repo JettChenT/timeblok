@@ -209,7 +209,8 @@ fn parse_timerange(pair: Pair<Rule>) -> Result<Range> {
 
 fn parse_numval(pair: Pair<Rule>) -> Result<NumVal> {
     // TODO: add support for unsure
-    Ok(NumVal::Number(
-        i64::from_str_radix(pair.as_str(), 10)?
-    ))
+    Ok(match i64::from_str_radix(pair.as_str(), 10){
+        Ok(n) => NumVal::Number(n),
+        _ => NumVal::Unsure
+    })
 }
