@@ -2,6 +2,11 @@
 name = "timeblok"
 version = "0.1.0"
 edition = "2021"
+authors = ["contact@jettchen.me"]
+license = "MIT/Apache-2.0"
+description = "A language for event scheduling in plain text"
+homepage = "https://github.com/JettChenT/timeblok"
+repository = "https://github.com/JettChenT/timeblok"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
