@@ -3,14 +3,24 @@ use anyhow::anyhow;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use crate::ir::*;
+use crate::ir::Range::AllDay;
 
 #[derive(Parser)]
 #[grammar = "blok.pest"]
 pub struct BlokParser;
 
+macro_rules! get_next {
+    ($pairs:ident) => {
+        match $pairs.next() {
+            Some(pair) => pair,
+            None => return Err(anyhow!("Expected Token")),
+        }
+    };
+}
+
 macro_rules! get_match {
     ($fnc:ident, $pairs:ident) => {
-        $fnc($pairs.next().unwrap())
+        $fnc(get_next!($pairs))
     };
 }
 
@@ -31,7 +41,7 @@ pub fn parse_file(pair: Pair<Rule>) -> Result<Vec<Record>> {
 
 pub fn parse_record(pair: Pair<Rule>) -> Result<Record> {
     let mut pairs = pair.into_inner();
-    let record = pairs.next().unwrap();
+    let record = get_next!(pairs);
     match record.as_rule() {
         Rule::EVENT => {
             let event = parse_event(record)?;
@@ -53,7 +63,7 @@ pub fn parse_record(pair: Pair<Rule>) -> Result<Record> {
 
 fn parse_occasion(pair: Pair<Rule>) -> Result<DateTime> {
     let mut pairs = pair.clone().into_inner();
-    let pair = pairs.next().unwrap();
+    let pair = get_next!(pairs);
     match pair.as_rule() {
         Rule::DATETIME => {
             let date:Date = parse_date(pair)?;
@@ -85,9 +95,9 @@ fn parse_occasion(pair: Pair<Rule>) -> Result<DateTime> {
 
 fn parse_date(pair: Pair<Rule>) -> Result<Date> {
     let mut pairs = pair.into_inner();
-    let year = parse_numval(pairs.next().unwrap())?;
-    let month = parse_numval(pairs.next().unwrap())?;
-    let day = parse_numval(pairs.next().unwrap())?;
+    let year = get_match!(parse_numval, pairs)?;
+    let month= get_match!(parse_numval, pairs)?;
+    let day= get_match!(parse_numval, pairs)?;
     Ok(Date {
         year,
         month,
@@ -122,7 +132,8 @@ fn parse_time(pair: Pair<Rule>) -> Result<Time> {
 }
 
 pub fn parse_tod(pair: Pair<Rule>) -> Result<Tod> {
-    match pair.into_inner().next().unwrap().as_rule() {
+    let mut inner = pair.into_inner();
+    match get_next!(inner).as_rule() {
         Rule::AM => Ok(Tod::AM),
         Rule::PM => Ok(Tod::PM),
         _ => Err(anyhow!("Invalid TOD"))
@@ -133,7 +144,7 @@ pub fn parse_event(pair: Pair<Rule>) -> Result<Event> {
     // not quite sure if turn into pairs before or after function execution
     let mut pairs = pair.into_inner();
     let mut event:Event = {
-        let raw = pairs.next().unwrap();
+        let raw = get_next!(pairs);
         parse_event_header(raw)?
     };
     if pairs.peek().is_some() {
@@ -159,8 +170,8 @@ fn parse_notes(pairs: &mut Pairs<Rule>) -> Vec<String> {
 
 fn parse_event_header(pair: Pair<Rule>) -> Result<Event> {
     let mut pairs = pair.into_inner();
-    let timerange = parse_timerange(pairs.next().unwrap())?;
-    let name = parse_note(pairs.next().unwrap()).to_string();
+    let timerange = get_match!(parse_timerange, pairs)?;
+    let name = get_match!(parse_note, pairs).to_string();
 
     Ok(Event {
         range: timerange,
@@ -173,8 +184,8 @@ fn parse_timerange(pair: Pair<Rule>) -> Result<Range> {
     match pair.as_rule(){
         Rule::RANGE => {
             let mut pairs = pair.into_inner();
-            let start = parse_occasion(pairs.next().unwrap())?;
-            let end = parse_occasion(pairs.next().unwrap())?;
+            let start = get_match!(parse_occasion, pairs)?;
+            let end = get_match!(parse_occasion, pairs)?;
             Ok(
                 Range::TimeRange(
                     TimeRange {
@@ -190,11 +201,14 @@ fn parse_timerange(pair: Pair<Rule>) -> Result<Range> {
                 Some(_) => {
                     Ok(Range::Duration(Duration{
                         start: occasion,
-                        duration: NumVal::Number(30)
+                        duration: NumVal::Unsure
                     }))
                 },
                 None => {
-                    Ok(Range::AllDay(occasion.date.unwrap()))
+                    match occasion.date {
+                        None => {return Err(anyhow!("Invalid occasion"))},
+                        Some(date) => {Ok(AllDay(date))}
+                    }
                 }
             }
         },
