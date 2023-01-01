@@ -1,5 +1,5 @@
-use clap::builder::Str;
-use pest::pratt_parser::Op;
+
+
 
 #[derive(Debug)]
 pub enum NumVal{
@@ -80,7 +80,8 @@ pub struct ExactDate{
 }
 
 #[derive(Debug)]
-pub enum TOD {
+pub enum Tod {
+    // Add support for resolving
     AM,
     PM
 }
@@ -90,7 +91,7 @@ pub struct Time {
     pub hour:NumVal,
     pub minute:NumVal,
     pub second:NumVal,
-    pub tod: Option<TOD>
+    pub tod: Option<Tod>
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -125,6 +126,5 @@ pub enum Record{
 #[derive(Debug)]
 pub enum ExactRecord{
     Event(ExactEvent),
-    Occasion(ExactDateTime),
     Note(String)
 }

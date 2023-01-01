@@ -1,9 +1,7 @@
 use anyhow::Result;
 use anyhow::anyhow;
 use pest::iterators::{Pair, Pairs};
-use pest::{Parser, parses_to};
 use pest_derive::Parser;
-use crate::ir;
 use crate::ir::*;
 
 #[derive(Parser)]
@@ -16,12 +14,12 @@ macro_rules! get_match {
     };
 }
 
-pub fn parse_file(pair: Pair<Rule>) -> Result<Vec<Box<Record>>> {
+pub fn parse_file(pair: Pair<Rule>) -> Result<Vec<Record>> {
     let mut records = vec![];
     for record in pair.into_inner() {
         match record.as_rule() {
             Rule::RECORD => {
-                records.push(Box::new(parse_record(record)?))
+                records.push(parse_record(record)?)
             }
             _ => {
                 return Err(anyhow!("Invalid record"));
@@ -106,30 +104,27 @@ fn parse_time(pair: Pair<Rule>) -> Result<Time> {
         second: NumVal::Unsure,
         tod: None
     };
-    match pairs.peek() {
-        Some(r) => {
-            match r.as_rule() {
-                Rule::FIELD => {
-                    res.minute = get_match!(parse_numval, pairs)?;
-                    if let Some(r) = pairs.next() {
-                        res.tod = Some(parse_tod(r)?);
-                    }
-                },
-                Rule::TOD => {
-                    res.tod = Some(get_match!(parse_tod, pairs)?);
-                },
-                _ => {Err(anyhow!("Invalid time"))?}
-            }
-        },
-        _ => {}
+    if let Some(r) = pairs.peek() {
+        match r.as_rule() {
+            Rule::FIELD => {
+                res.minute = get_match!(parse_numval, pairs)?;
+                if let Some(r) = pairs.next() {
+                    res.tod = Some(parse_tod(r)?);
+                }
+            },
+            Rule::TOD => {
+                res.tod = Some(get_match!(parse_tod, pairs)?);
+            },
+            _ => {Err(anyhow!("Invalid time"))?}
+        }
     };
     Ok(res)
 }
 
-pub fn parse_tod(pair: Pair<Rule>) -> Result<TOD> {
+pub fn parse_tod(pair: Pair<Rule>) -> Result<Tod> {
     match pair.into_inner().next().unwrap().as_rule() {
-        Rule::AM => Ok(TOD::AM),
-        Rule::PM => Ok(TOD::PM),
+        Rule::AM => Ok(Tod::AM),
+        Rule::PM => Ok(Tod::PM),
         _ => Err(anyhow!("Invalid TOD"))
     }
 }
@@ -141,9 +136,9 @@ pub fn parse_event(pair: Pair<Rule>) -> Result<Event> {
         let raw = pairs.next().unwrap();
         parse_event_header(raw)?
     };
-    if let Some(_) = pairs.peek() {
+    if pairs.peek().is_some() {
         // Assuming that all stuff are notes for now...
-        let mut notes = parse_notes(&mut pairs);
+        let notes = parse_notes(&mut pairs);
         let descriptions = notes.join("\n");
         event.notes = Some(descriptions);
     }
@@ -208,8 +203,7 @@ fn parse_timerange(pair: Pair<Rule>) -> Result<Range> {
 }
 
 fn parse_numval(pair: Pair<Rule>) -> Result<NumVal> {
-    // TODO: add support for unsure
-    Ok(match i64::from_str_radix(pair.as_str(), 10){
+    Ok(match pair.as_str().parse::<i64>(){
         Ok(n) => NumVal::Number(n),
         _ => NumVal::Unsure
     })

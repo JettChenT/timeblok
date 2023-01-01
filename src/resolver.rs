@@ -1,10 +1,12 @@
 use crate::ir::*;
 use std::time::SystemTime;
-use chrono::{Datelike, prelude as cr, Timelike};
-use chrono::{TimeZone,Local, Utc};
+use chrono::{Datelike, prelude as cr};
+use chrono::Local;
 use crate::ir::NumVal::Number;
 
-pub fn resolve(records: Vec<Box<Record>>, created: SystemTime) -> Vec<Box<ExactRecord>> {
+// TODO: Change all resolve to Result<> based
+
+pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
     let base_time:cr::DateTime<Local> = created.into();
     let mut base  = ExactDateTime {
         date: {
@@ -27,18 +29,18 @@ pub fn resolve(records: Vec<Box<Record>>, created: SystemTime) -> Vec<Box<ExactR
 
     let mut resolved = vec![];
     for record in records {
-        match record.as_ref() {
+        match record {
             Record::Event(event) => {
-                let event = resolve_event(event, &base);
-                resolved.push(Box::new(ExactRecord::Event(event)));
+                let event = resolve_event(&event, &base);
+                resolved.push(ExactRecord::Event(event));
             }
             Record::Occasion(occasion) => {
-                let occasion = resolve_occasion(occasion, &base);
+                let occasion = resolve_occasion(&occasion, &base);
                 // PERFORMANCE: update base inplace
                 base = occasion;
             }
             Record::Note(note) => {
-                resolved.push(Box::new(ExactRecord::Note(note.to_string())));
+                resolved.push(ExactRecord::Note(note.to_string()));
             }
         }
     }
@@ -51,12 +53,12 @@ fn resolve_occasion(occasion: &DateTime, base:&ExactDateTime) -> ExactDateTime {
         date: if let Some(date) = &occasion.date {
             resolve_date(date, &base.date)
         } else {
-            base.date.clone()
+            base.date
         },
         time: if let Some(time) = &occasion.time {
             resolve_time(time, &base.time)
         } else {
-            base.time.clone()
+            base.time
         },
         tz: base.tz,
     }
@@ -65,7 +67,11 @@ fn resolve_occasion(occasion: &DateTime, base:&ExactDateTime) -> ExactDateTime {
 fn resolve_time(time: &Time, base: &ExactTime) -> ExactTime {
     ExactTime{
         hour: match time.hour {
-            Number(n) => n as u32,
+            Number(n) => (match time.tod {
+                Some(Tod::AM) => n, // TODO: Error if n > 12
+                Some(Tod::PM) => n + 12, // TODO: handle 12PM
+                None => n, // TODO: Error if n > 24
+            }) as u32,
             _ => base.hour,
         },
         minute: match time.minute {
@@ -112,18 +118,18 @@ fn resolve_range(range: &Range, base: &ExactDateTime) -> ExactRange {
             ExactRange::AllDay(date)
         },
         Range::TimeRange(time_range) => {
-            let start = resolve_occasion(&time_range.start, &base);
-            let end = resolve_occasion(&time_range.end, &base);
+            let start = resolve_occasion(&time_range.start, base);
+            let end = resolve_occasion(&time_range.end, base);
             ExactRange::TimeRange(ExactTimeRange{start, end})
         },
         Range::Duration(duration) => {
-            ExactRange::Duration(resolve_duration(duration, &base))
+            ExactRange::Duration(resolve_duration(duration, base))
         },
     }
 }
 
 fn resolve_duration(duration: &Duration, base: &ExactDateTime) -> ExactDuration {
-    let start = resolve_occasion(&duration.start, &base);
+    let start = resolve_occasion(&duration.start, base);
     let dur = match duration.duration {
         Number(n) => {
             if n<0 { panic!("Duration cannot be negative") }
