@@ -15,6 +15,20 @@ to the convienence of modern digital calendars via compiling
 to .ics files, a file format for digital events that's barely human-readable but is supported by all calendar applications.
 
 ### Examples
+#### Daily planning
+This is the simplest use case
+```
+2023-1-1
+7:30am wake up & eat beakfast
+8am~11:30 work on TimeBlok
+- Write Technical Documentation
+2pm~6pm Study for exams
+8pm~10pm Reading
+- Finish an entire book
+```
+When compiled into an .ics file, this could be imported into your calendar.
+![](./media/dayplan.png)
+
 #### Monthly planning
 ```
 2023-1-
@@ -43,7 +57,10 @@ When resolved, this is equivalent to the following events, which will then be co
 2023-2-1 3:00~4:00 Initiate operation "Hack the planet"
 ```
 
-### Rules
+... Which could be imported into your digital calendar!
+![](media/monthlyplan.png)
+
+### Rules (WIP)
 (Correct me if I'm wrong about any terms, I started [Crafting Interpreters](https://craftinginterpreters.com/) a week ago)
 
 The TimeBlock language currently recognizes three types of statements(by order of precedence):
