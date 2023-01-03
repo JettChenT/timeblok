@@ -92,6 +92,6 @@ $ cargo install timeblok
 
 ## Usage
 ```bash
-$ timeblok -i input.txt -o output.ics
+$ timeblok input.txt -o output.ics
 ```
 
