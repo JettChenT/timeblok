@@ -7,8 +7,11 @@ pub struct Args{
     #[arg(value_parser)]
     pub infile: String,
     /// Path of the output .ics file
-    #[arg(short, long)]
-    pub outfile: Option<String>
+    #[arg(short='f', long)]
+    pub outfile: Option<String>,
+    /// Whether to open the output file after it is created
+    #[arg(short='o', long)]
+    pub open: bool
 }
 
 pub fn parse() -> Args {

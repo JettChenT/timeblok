@@ -7,16 +7,19 @@ use std::io::Write;
 use pest::Parser;
 use crate::parser::{parse_file, Rule};
 use anyhow::Result;
+use directories::BaseDirs;
 
 mod parser;
 mod args;
 mod ir;
 mod resolver;
 mod converter;
+mod output;
 
 use parser::BlokParser;
 use resolver::resolve;
 use converter::to_ical;
+use crate::output::warn;
 
 fn main() {
     let args = args::parse();
@@ -44,9 +47,21 @@ fn try_main(args: args::Args) -> Result<()> {
         Some(path) => {
             let mut file = fs::File::create(path)?;
             file.write_all(converted.as_bytes())?;
+            if args.open {
+                open::that(path)?;
+            }
         }
         _ => {
             println!("{}", converted);
+            if args.open{
+                // Save file in temporary directory and open it
+                let base_dirs = BaseDirs::new().expect("Could not get base directories");
+                let temp_dir = base_dirs.cache_dir();
+                let path = temp_dir.join(".blok.ics");
+                let mut file = fs::File::create(&path)?;
+                file.write_all(converted.as_bytes())?;
+                open::that(&path)?;
+            }
         }
     }
     Ok(())

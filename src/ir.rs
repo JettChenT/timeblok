@@ -1,6 +1,3 @@
-
-
-
 #[derive(Debug)]
 pub enum NumVal{
     Number(i64),
