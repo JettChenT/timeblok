@@ -1,9 +1,9 @@
 SP = _{" "*}
 COMMENT = _{"//"~(!NEWLINE~ANY)*}
 NUM_FIELD = {ASCII_DIGIT+}
-AND = {"&"}
-OR = {","|"|"}
-
+AND = {"&" | "and"}
+OR = {","|"|" | "or"}
+NOT = {"!" | "not"}
 
 UNSURE = {""} // Inherits values or constraints possessed from upstream
 ALL={"*"} // Overrides upstream constraints, assumes all possible values
@@ -39,7 +39,7 @@ DATE = {FIELD ~ "-" ~ FIELD~ "-" ~ FIELD}
 DATETIME = {DATE ~ SP ~ TIME}
 OCCASION = {DATETIME | DATE | TIME}
 
-UNIT_DATE_FILTER = {"!"? ~ (
+UNIT_DATE_FILTER = {NOT? ~ (
     RANGE|
     FLEX_DATE|
     DATE_FILTER
@@ -51,7 +51,7 @@ DATE_FILTER = {
 
 FLEX_DATE = {FLEX_FIELD~"-"~FLEX_FIELD~"-"~FLEX_FIELD}
 FLEX_DATETIME = {FLEX_DATE ~ SP ~ TIME}
-FLEX_OCCASION = {FLEX_DATETIME | FLEX_DATE | TIME} // Don't see much value in bringing flex to time in day.
+FLEX_OCCASION = {FLEX_DATETIME | FLEX_DATE | TIME | DATE_FILTER} // Don't see much value in bringing flex to time in day.
 
 RANGE = {OCCASION ~ SP ~ "~" ~ SP ~ OCCASION}
 EVENT_HEADER = {(RANGE | OCCASION) ~ SP ~ NOTE_LINE}

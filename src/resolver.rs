@@ -5,6 +5,10 @@ use chrono::{Datelike, prelude as cr};
 use chrono::Local;
 use crate::ir::NumVal::Number;
 
+pub struct Environment{
+    pub base: ExactDateTime
+}
+
 // TODO: Change all resolve to Result<> based
 
 pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
@@ -50,6 +54,10 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
             }
             Record::Note(note) => {
                 resolved.push(ExactRecord::Note(note.to_string()));
+            }
+            Record::FlexOccasion(occasion) => {
+                eprintln!("{:?}", occasion);
+                todo!()
             }
         }
     }

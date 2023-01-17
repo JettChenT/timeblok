@@ -1,7 +1,9 @@
+use std::fmt::Debug;
+
 use crate::ir::*;
 use crate::ir::NumVal::{Number, Unsure};
 
-pub trait Filter<T>{
+pub trait Filter<T>: Debug{
     fn check(&self, value:&T) -> bool;
     fn filter(&self, values:Vec<T>) -> Vec<T>{
         // PERFORMANCE: Change this to parallel execution, use references and lifetimes to improve memory efficiency
@@ -15,23 +17,23 @@ pub trait Filter<T>{
     }
 }
 
+#[derive(Debug)]
 pub enum Op{
     OR,
     AND
 }
 
-macro_rules! bdf {
-    ($typ:ty) => {Box<dyn Filter<$typ>>};
+pub type BDF<T> = Box<dyn Filter<T>>;
+
+
+#[derive(Debug)]
+pub struct BinFilt<T: Debug>{
+    pub lhs: BDF<T>,
+    pub rhs: BDF<T>,
+    pub op: Op
 }
 
-
-pub struct BinFilt<T>{
-    lhs: bdf!(T),
-    rhs: bdf!(T),
-    op: Op
-}
-
-impl<T> Filter<T> for BinFilt<T> {
+impl<T: Debug> Filter<T> for BinFilt<T> {
     fn check(&self, value: &T) -> bool {
         match self.op {
             Op::OR => self.lhs.check(value) || self.rhs.check(value),
@@ -40,11 +42,13 @@ impl<T> Filter<T> for BinFilt<T> {
     }
 }
 
+
+#[derive(Debug)]
 pub struct ExcludeFilt<T>{
-    target: bdf!(T)
+    pub target: BDF<T>
 }
 
-impl<T> Filter<T> for ExcludeFilt<T> {
+impl<T:Debug> Filter<T> for ExcludeFilt<T> {
     fn check(&self, value: &T) -> bool {
         !self.target.check(value)
     }

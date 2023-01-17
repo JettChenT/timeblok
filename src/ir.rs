@@ -1,3 +1,7 @@
+use std::any::Any;
+
+use crate::filter::Filter;
+
 #[derive(Debug, Eq, PartialEq)]
 pub enum NumVal{
     Number(i64),
@@ -137,11 +141,17 @@ pub struct ExactEvent{
 pub enum Record{
     Event(Event),
     Occasion(DateTime),
-    Note(String)
+    Note(String),
+    FlexOccasion(FlexOccasion)
 }
 
 #[derive(Debug)]
 pub enum ExactRecord{
     Event(ExactEvent),
     Note(String)
+}
+
+#[derive(Debug)]
+pub enum FlexOccasion {
+    Filter(Box<dyn Filter<Date>>),
 }
