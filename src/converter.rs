@@ -56,13 +56,13 @@ impl ExactEvent {
                     .ends(range.end.to_chrono()?)
                     .done();
             },
-            ExactRange::Duration(duration) => {
-                let shift = chrono::Duration::minutes(duration.duration as i64);
-                calevent = calevent
-                    .starts(duration.start.to_chrono()?)
-                    .ends(duration.start.to_chrono()?+shift)
-                    .done();
-            },
+            // ExactRange::Duration(duration) => {
+            //     let shift = chrono::Duration::minutes(duration.duration as i64);
+            //     calevent = calevent
+            //         .starts(duration.start.to_chrono()?)
+            //         .ends(duration.start.to_chrono()?+shift)
+            //         .done();
+            // },
             ExactRange::AllDay(date) => {
                 calevent = calevent
                     .all_day(date.to_chrono()?)

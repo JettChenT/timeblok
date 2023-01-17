@@ -15,6 +15,7 @@ mod ir;
 mod resolver;
 mod converter;
 mod output;
+mod filter;
 
 use parser::BlokParser;
 use resolver::resolve;

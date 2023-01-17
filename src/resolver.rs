@@ -162,7 +162,8 @@ fn resolve_range(range: &Range, base: &ExactDateTime) -> Result<ExactRange> {
             ExactRange::TimeRange(ExactTimeRange { start, end })
         }
         Range::Duration(duration) => {
-            ExactRange::Duration(resolve_duration(duration, base)?)
+            // ExactRange::Duration(resolve_duration(duration, base)?)
+            todo!()
         }
     })
 }
