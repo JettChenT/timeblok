@@ -142,7 +142,8 @@ pub enum Record{
     Event(Event),
     Occasion(DateTime),
     Note(String),
-    FlexOccasion(FlexOccasion)
+    FlexOccasion(FlexOccasion),
+    FlexEvents(FlexEvents)
 }
 
 #[derive(Debug)]
@@ -154,4 +155,10 @@ pub enum ExactRecord{
 #[derive(Debug)]
 pub enum FlexOccasion {
     Filter(Box<dyn Filter<Date>>),
+}
+
+#[derive(Debug)]
+pub struct FlexEvents{
+    pub occasion: FlexOccasion,
+    pub events: Vec<Event>
 }

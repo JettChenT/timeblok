@@ -11,7 +11,13 @@ pub struct Args{
     pub outfile: Option<String>,
     /// Whether to open the output file after it is created
     #[arg(short='o', long)]
-    pub open: bool
+    pub open: bool,
+    /// Parse only option
+    #[arg(long)]
+    pub parse_only: bool,
+    /// Whether to print the parsed output
+    #[arg(long)]
+    pub print: bool,
 }
 
 pub fn parse() -> Args {

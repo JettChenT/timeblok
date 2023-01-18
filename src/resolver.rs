@@ -1,7 +1,7 @@
 use crate::ir::*;
 use std::time::SystemTime;
 use anyhow::{Result, anyhow};
-use chrono::{Datelike, prelude as cr};
+use chrono::{Datelike, prelude as cr, Timelike};
 use chrono::Local;
 use crate::ir::NumVal::Number;
 
@@ -59,13 +59,17 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 eprintln!("{:?}", occasion);
                 todo!()
             }
+            Record::FlexEvents(flex_events) => {
+                eprintln!("{:?}", flex_events);
+                todo!()
+            }
         }
     }
     resolved
 }
 
 // Should it really be named occasion... perhaps rename it to resolve_datetime?
-fn resolve_occasion(occasion: &DateTime, base:&ExactDateTime) -> Result<ExactDateTime> {
+pub fn resolve_occasion(occasion: &DateTime, base:&ExactDateTime) -> Result<ExactDateTime> {
     Ok(ExactDateTime {
         date: if let Some(date) = &occasion.date {
             resolve_date(date, &base.date)?
@@ -81,7 +85,7 @@ fn resolve_occasion(occasion: &DateTime, base:&ExactDateTime) -> Result<ExactDat
     })
 }
 
-fn resolve_time(time: &Time, base: &ExactTime) -> Result<ExactTime> {
+pub fn resolve_time(time: &Time, base: &ExactTime) -> Result<ExactTime> {
     Ok(ExactTime {
         hour: match time.hour {
             Number(n) => (match &time.tod {
@@ -131,7 +135,7 @@ fn resolve_time(time: &Time, base: &ExactTime) -> Result<ExactTime> {
     })
 }
 
-fn resolve_date(date: &Date, base: &ExactDate) -> Result<ExactDate> {
+pub fn resolve_date(date: &Date, base: &ExactDate) -> Result<ExactDate> {
     let res = ExactDate {
         year: match date.year {
             Number(n) => n as i32,
@@ -150,7 +154,7 @@ fn resolve_date(date: &Date, base: &ExactDate) -> Result<ExactDate> {
 }
 
 
-fn resolve_event(event: &Event, base: &ExactDateTime) -> Result<ExactEvent> {
+pub fn resolve_event(event: &Event, base: &ExactDateTime) -> Result<ExactEvent> {
     Ok(ExactEvent {
         range: resolve_range(&event.range, base)?,
         name: event.name.clone(),
@@ -158,7 +162,7 @@ fn resolve_event(event: &Event, base: &ExactDateTime) -> Result<ExactEvent> {
     })
 }
 
-fn resolve_range(range: &Range, base: &ExactDateTime) -> Result<ExactRange> {
+pub fn resolve_range(range: &Range, base: &ExactDateTime) -> Result<ExactRange> {
     Ok(match range {
         Range::AllDay(date) => {
             let date = resolve_date(date, &base.date)?;
@@ -171,12 +175,19 @@ fn resolve_range(range: &Range, base: &ExactDateTime) -> Result<ExactRange> {
         }
         Range::Duration(duration) => {
             // ExactRange::Duration(resolve_duration(duration, base)?)
-            todo!()
+            let start = resolve_occasion(&duration.start, base)?;
+            let shift = chrono::Duration::minutes(match duration.duration {
+                Number(n) => n,
+                _ => 30,
+            });
+            let end_ch = start.to_chrono()?+shift;
+            let end = ExactDateTime::from_chrono(end_ch);
+            ExactRange::TimeRange(ExactTimeRange { start, end })
         }
     })
 }
 
-fn resolve_duration(duration: &Duration, base: &ExactDateTime) -> Result<ExactDuration> {
+pub fn resolve_duration(duration: &Duration, base: &ExactDateTime) -> Result<ExactDuration> {
     let start = resolve_occasion(&duration.start, base)?;
     let dur = match duration.duration {
         Number(n) => {

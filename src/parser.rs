@@ -2,9 +2,10 @@ use std::fmt::Debug;
 
 use anyhow::Result;
 use anyhow::anyhow;
+use clap::Error;
 use lazy_static::lazy_static;
 use pest::iterators::{Pair, Pairs};
-use pest::pratt_parser::PrattParser;
+use pest::pratt_parser::{PrattParser, PrattParserMap};
 use pest_derive::Parser;
 use crate::filter;
 use crate::filter::BDF;
@@ -68,10 +69,34 @@ pub fn parse_record(pair: Pair<Rule>) -> Result<Record> {
             let occasion = parse_flex_occasion(record)?;
             Ok(Record::FlexOccasion(occasion))
         },
+        Rule::FLEX_EVENTS => {
+            let flex_events = parse_flex_events(record)?;
+            Ok(Record::FlexEvents(flex_events))
+        }
         _ => {
             Err(anyhow!(format!("Invalid record: {:?}", record)))
         }
     }
+}
+
+fn parse_flex_events(pair: Pair<Rule>) -> Result<FlexEvents> {
+    let mut pairs = pair.into_inner();
+    let condition = get_match!(parse_flex_occasion, pairs)?;
+    let mut events = vec![];
+    while pairs.peek().is_some() {
+        let nxt = get_next!(pairs);
+        match nxt.as_rule() {
+            Rule::EVENT => {
+                let event = parse_event(nxt)?;
+                events.push(event);
+            }
+            _ => unreachable!("Invalid rule")
+        }
+    }
+    Ok(FlexEvents{
+        occasion: condition,
+        events
+    })
 }
 
 fn parse_occasion(pair: Pair<Rule>) -> Result<DateTime> {
@@ -246,17 +271,18 @@ lazy_static!{
     };
 }
 
-pub fn parse_filter<T: 'static>(pair: Pair<Rule>) -> Result<BDF<T>> 
-    where T:Debug
-{
+pub fn parse_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
     let mut pairs = pair.into_inner();
     PRATT_PARSER
         .map_primary(|primary| match primary.as_rule(){
-            Rule::FILTER => parse_filter(primary),
-            Rule::UNIT_DATE_FILTER => parse_filter(primary),
-            Rule::DATE_FILTER => parse_filter(primary),
-            Rule::RANGE => todo!(),
-            e => unreachable!("Invalid primary rule: {:?}", e)
+            Rule::FILTER => parse_date_filter(primary),
+            Rule::UNIT_DATE_FILTER => parse_date_filter(primary),
+            Rule::DATE_FILTER => parse_date_filter(primary),
+            Rule::RANGE => {
+                let trange = parse_timerange(primary)?;
+                Ok(Box::new(trange) as BDF<Date>)
+            },
+            _ => todo!()
         })
         .map_infix(|lhs, op, rhs|{
             let lhs = lhs?;
@@ -283,7 +309,7 @@ pub fn parse_flex_occasion(pair: Pair<Rule>) -> Result<FlexOccasion> {
     match fst.as_rule() {
         Rule::FLEX_DATETIME => todo!(),
         Rule::DATE_FILTER => {
-            let filter = parse_filter(fst)?;
+            let filter = parse_date_filter(fst)?;
             Ok(FlexOccasion::Filter(filter))
         },
         sth => unreachable!("Invalid flex occasion rule: {:?}", sth)

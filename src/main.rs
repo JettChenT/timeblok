@@ -42,6 +42,12 @@ fn try_main(args: args::Args) -> Result<()> {
         .unwrap();
 
     let records= parse_file(file)?;
+    if args.print {
+        println!("{:#?}", records);
+    }
+    if args.parse_only {
+        return Ok(());
+    }
     let resolved = resolve(records, created);
     let converted = to_ical(resolved);
     match &args.outfile {

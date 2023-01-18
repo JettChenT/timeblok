@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use crate::ir::{ExactRecord, ExactRange, ExactDateTime, ExactDate, ExactTime, TimeZoneChoice, ExactEvent};
 use icalendar as ical;
 use icalendar::{Component, EventLike};
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime, prelude as cr};
+use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, prelude as cr, Timelike};
 use chrono::{TimeZone,Local, Utc};
 use chrono::LocalResult::Single;
 
@@ -38,6 +38,22 @@ impl ExactDateTime{
             TimeZoneChoice::Utc => {
                 Ok(Utc.from_utc_datetime(&baset))
             }
+        }
+    }
+
+    pub fn from_chrono(t: cr::DateTime<Utc>) -> Self {
+        ExactDateTime {
+            date: ExactDate {
+                year: t.year(),
+                month: t.month(),
+                day: t.day(),
+            },
+            time: ExactTime {
+                hour: t.hour(),
+                minute: t.minute(),
+                second: t.second(),
+            },
+            tz: TimeZoneChoice::Utc,
         }
     }
 }
