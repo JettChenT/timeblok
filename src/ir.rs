@@ -1,11 +1,20 @@
+use std::any::Any;
 
+use crate::filter::Filter;
 
-
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum NumVal{
     Number(i64),
     Unsure
 }
+
+#[derive(Debug)]
+pub struct NumRange{
+    pub start:NumVal,
+    pub end:NumVal
+}
+
+
 
 #[derive(Debug)]
 pub enum Range{
@@ -17,7 +26,6 @@ pub enum Range{
 #[derive(Debug)]
 pub enum ExactRange{
     TimeRange(ExactTimeRange),
-    Duration(ExactDuration),
     AllDay(ExactDate)
 }
 
@@ -66,13 +74,26 @@ pub struct ExactDateTime{
 }
 
 #[derive(Debug)]
+pub enum FlexField{
+    NumVal(NumVal),
+    NumRange(NumRange),
+}
+
+#[derive(Debug)]
+pub struct FlexDate{
+    pub year: FlexField,
+    pub month: FlexField,
+    pub day: FlexField,
+}
+
+#[derive(Debug)]
 pub struct Date {
     pub year:NumVal,
     pub month:NumVal,
     pub day:NumVal
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct ExactDate{
     pub year: i32,
     pub month: u32,
@@ -120,11 +141,24 @@ pub struct ExactEvent{
 pub enum Record{
     Event(Event),
     Occasion(DateTime),
-    Note(String)
+    Note(String),
+    FlexOccasion(FlexOccasion),
+    FlexEvents(FlexEvents)
 }
 
 #[derive(Debug)]
 pub enum ExactRecord{
     Event(ExactEvent),
     Note(String)
+}
+
+#[derive(Debug)]
+pub enum FlexOccasion {
+    Filter(Box<dyn Filter<Date>>),
+}
+
+#[derive(Debug)]
+pub struct FlexEvents{
+    pub occasion: FlexOccasion,
+    pub events: Vec<Event>
 }

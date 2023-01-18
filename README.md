@@ -91,7 +91,12 @@ $ cargo install timeblok
 ```
 
 ## Usage
+Exporting to file:
 ```bash
-$ timeblok input.txt -o output.ics
+$ timeblok input.txt -f output.ics
 ```
 
+Exporting & opening in default calendar application:
+```bash
+$ timeblok input.txt -o
+```

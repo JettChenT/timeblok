@@ -1,27 +1,70 @@
 SP = _{" "*}
+COMMENT = _{"//"~(!NEWLINE~ANY)*}
 NUM_FIELD = {ASCII_DIGIT+}
-UNSURE = {""}
+AND = {"&" | "and"}
+OR = {","|"|" | "or"}
+NOT = {"!" | "not"}
+
+UNSURE = {""} // Inherits values or constraints possessed from upstream
+ALL={"*"} // Overrides upstream constraints, assumes all possible values
 AM = {"AM" | "am"}
 PM = {"PM" | "pm"}
 TOD = {AM | PM }
 FIELD = {NUM_FIELD | UNSURE}
+NUM_RANGE = {FIELD~SP~"~"~SP~FIELD}
+
+UNIT_FILTER = _{NUM_RANGE | RANGE | NUM_FIELD } //TODO: Implement `Rule`
+
+OP = _{OR|AND}
+
+FILTER = {
+    "{"~
+    (
+	   (FILTER|UNIT_FILTER)
+       ~SP~
+       (OP~(FILTER|UNIT_FILTER))*
+    )
+    ~"}"
+}
+
+FLEX_FIELD = _{FILTER | FIELD} // FLEX for "flexible"
+
 TIME = {
     FIELD ~
     (( ":" ~ FIELD? ~ SP ~ TOD?) |
     (":"~FIELD)? ~TOD)
 }
+
 DATE = {FIELD ~ "-" ~ FIELD~ "-" ~ FIELD}
 DATETIME = {DATE ~ SP ~ TIME}
 OCCASION = {DATETIME | DATE | TIME}
+
+UNIT_DATE_FILTER = {NOT? ~ (
+    RANGE|
+    FLEX_DATE|
+    DATE_FILTER
+)}
+
+DATE_FILTER = {
+    "{"~UNIT_DATE_FILTER~(SP~OP~SP~UNIT_DATE_FILTER)*~"}"
+}
+
+FLEX_DATE = {FLEX_FIELD~"-"~FLEX_FIELD~"-"~FLEX_FIELD}
+FLEX_DATETIME = {FLEX_DATE ~ SP ~ TIME}
+FLEX_OCCASION = {FLEX_DATETIME | FLEX_DATE | TIME | DATE_FILTER} // Don't see much value in bringing flex to time in day.
+
 RANGE = {OCCASION ~ SP ~ "~" ~ SP ~ OCCASION}
 EVENT_HEADER = {(RANGE | OCCASION) ~ SP ~ NOTE_LINE}
 NOTE = {(!NEWLINE~ANY)+}
 NOTE_LINE = _{NOTE ~ NEWLINE?}
 EVENT = {
     EVENT_HEADER ~ NEWLINE* ~
-    (!(EVENT_HEADER | OCCASION) ~ NOTE_LINE)*
+    (!(EVENT_HEADER | OCCASION | FLEX_OCCASION) ~ NOTE_LINE)*
 }
-RECORD = {EVENT | OCCASION | NOTE_LINE}
+FLEX_EVENTS = {
+	FLEX_OCCASION ~ NEWLINE* ~ EVENT*
+}
+RECORD = {EVENT | OCCASION | FLEX_EVENTS | NOTE_LINE}
 FILE = {
     SOI ~
     (RECORD ~ NEWLINE*)*
