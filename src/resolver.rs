@@ -3,17 +3,15 @@ use std::time::SystemTime;
 use anyhow::{Result, anyhow};
 use chrono::{Datelike, prelude as cr, Timelike};
 use chrono::Local;
-use crate::ir::NumVal::Number;
+use crate::ir::NumVal::{Number, Unsure};
+use crate::environment::Environment;
 
-pub struct Environment{
-    pub base: ExactDateTime
-}
 
 // TODO: Change all resolve to Result<> based
 
 pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
     let base_time:cr::DateTime<Local> = created.into();
-    let mut base  = ExactDateTime {
+    let base_t  = ExactDateTime {
         date: {
             let date = base_time.date_naive();
             ExactDate {
@@ -31,6 +29,19 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
         },
         tz: TimeZoneChoice::Local,
     };
+    let mut base = Environment {
+        current: DateTime{
+            date: Some(Date{
+                year: Number(base_t.date.year as i64),
+                month: Unsure,
+                day: Unsure,
+            }),
+            time: None,
+            tz: None
+        },
+        date_time: base_t,
+        parent: None,
+    };
 
     let mut resolved = vec![];
     for record in records {
@@ -43,11 +54,15 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 }
             }
             Record::Occasion(occasion) => {
-                let occasion = resolve_occasion(&occasion, &base);
+                let fixed_occasion = resolve_occasion(&occasion, &base);
                 // PERFORMANCE: update base inplace
-                match occasion {
-                    Ok(occasion) => {
-                        base = occasion;
+                match fixed_occasion {
+                    Ok(o) => {
+                        base = Environment{
+                            date_time: o,
+                            parent: Some(Box::new(base)),
+                            current: occasion
+                        };
                     },
                     Err(e) => eprintln!("Error resolving occasion: {}", e),
                 }
@@ -56,6 +71,7 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 resolved.push(ExactRecord::Note(note.to_string()));
             }
             Record::FlexOccasion(occasion) => {
+                // Filters
                 eprintln!("{:?}", occasion);
                 todo!()
             }
@@ -69,23 +85,24 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
 }
 
 // Should it really be named occasion... perhaps rename it to resolve_datetime?
-pub fn resolve_occasion(occasion: &DateTime, base:&ExactDateTime) -> Result<ExactDateTime> {
+pub fn resolve_occasion(occasion: &DateTime, base: &Environment) -> Result<ExactDateTime> {
     Ok(ExactDateTime {
         date: if let Some(date) = &occasion.date {
-            resolve_date(date, &base.date)?
+            resolve_date(date, &base)?
         } else {
-            base.date
+            base.date_time.date
         },
         time: if let Some(time) = &occasion.time {
-            resolve_time(time, &base.time)?
+            resolve_time(time, &base)?
         } else {
-            base.time
+            base.date_time.time
         },
-        tz: base.tz,
+        tz: base.date_time.tz,
     })
 }
 
-pub fn resolve_time(time: &Time, base: &ExactTime) -> Result<ExactTime> {
+pub fn resolve_time(time: &Time, base: &Environment) -> Result<ExactTime> {
+    let base_time = base.date_time.time;
     Ok(ExactTime {
         hour: match time.hour {
             Number(n) => (match &time.tod {
@@ -112,7 +129,7 @@ pub fn resolve_time(time: &Time, base: &ExactTime) -> Result<ExactTime> {
                     n
                 },
             }) as u32,
-            _ => base.hour,
+            _ => base_time.hour,
         },
         minute: match time.minute {
             Number(n) => {
@@ -121,7 +138,7 @@ pub fn resolve_time(time: &Time, base: &ExactTime) -> Result<ExactTime> {
                 }
                 n as u32
             },
-            _ => base.minute,
+            _ => base_time.minute,
         },
         second: match time.second {
             Number(n) => {
@@ -130,31 +147,32 @@ pub fn resolve_time(time: &Time, base: &ExactTime) -> Result<ExactTime> {
                 }
                 n as u32
             },
-            _ => base.second,
+            _ => base_time.second,
         },
     })
 }
 
-pub fn resolve_date(date: &Date, base: &ExactDate) -> Result<ExactDate> {
+pub fn resolve_date(date: &Date, base: &Environment) -> Result<ExactDate> {
+    let base_date = base.date_time.date;
     let res = ExactDate {
         year: match date.year {
             Number(n) => n as i32,
-            _ => base.year,
+            _ => base_date.year,
         },
         month: match date.month {
             Number(n) => n as u32,
-            _ => base.month,
+            _ => base_date.month,
         },
         day: match date.day {
             Number(n) => n as u32,
-            _ => base.day,
+            _ => base_date.day,
         },
     };
     Ok(res)
 }
 
 
-pub fn resolve_event(event: &Event, base: &ExactDateTime) -> Result<ExactEvent> {
+pub fn resolve_event(event: &Event, base: &Environment) -> Result<ExactEvent> {
     Ok(ExactEvent {
         range: resolve_range(&event.range, base)?,
         name: event.name.clone(),
@@ -162,10 +180,10 @@ pub fn resolve_event(event: &Event, base: &ExactDateTime) -> Result<ExactEvent> 
     })
 }
 
-pub fn resolve_range(range: &Range, base: &ExactDateTime) -> Result<ExactRange> {
+pub fn resolve_range(range: &Range, base: &Environment) -> Result<ExactRange> {
     Ok(match range {
         Range::AllDay(date) => {
-            let date = resolve_date(date, &base.date)?;
+            let date = resolve_date(date, &base)?;
             ExactRange::AllDay(date)
         }
         Range::TimeRange(time_range) => {
@@ -187,7 +205,7 @@ pub fn resolve_range(range: &Range, base: &ExactDateTime) -> Result<ExactRange> 
     })
 }
 
-pub fn resolve_duration(duration: &Duration, base: &ExactDateTime) -> Result<ExactDuration> {
+pub fn resolve_duration(duration: &Duration, base: &Environment) -> Result<ExactDuration> {
     let start = resolve_occasion(&duration.start, base)?;
     let dur = match duration.duration {
         Number(n) => {

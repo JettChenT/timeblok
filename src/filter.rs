@@ -2,7 +2,8 @@ use std::fmt::Debug;
 
 use crate::ir::*;
 use crate::ir::NumVal::{Number, Unsure};
-use crate::resolver::{Environment, resolve_date, resolve_range};
+use crate::resolver::{resolve_date, resolve_range};
+use crate::environment::Environment;
 
 pub trait Filter<T>: Debug{
     fn check(&self, value:&T, env: Option<&Environment>) -> bool;
@@ -59,17 +60,11 @@ impl Filter<NumVal> for NumRange{
     fn check(&self, value: &NumVal, env:Option<&Environment>) -> bool {
         match *value {
             Number(target) => {
-                match self.start {
-                    Unsure => match self.end {
-                        Unsure => true,
-                        Number(n) => target <= n
-                    },
-                    Number(st) => {
-                        match self.end {
-                            Unsure => target >= st,
-                            Number(nd) => target >= st && target <= nd
-                        }
-                    }
+                match (&self.start, &self.end) {
+                    (Unsure, Unsure) => true,
+                    (Unsure, Number(nd)) => target <= *nd,
+                    (Number(st), Unsure) => target >= *st,
+                    (Number(st), Number(nd)) => target >= *st && target <= *nd
                 }
             },
             _ => true
@@ -106,8 +101,8 @@ impl Filter<ExactDate> for ExactRange{
 impl Filter<Date> for Range{
     fn check(&self, value: &Date, env:Option<&Environment>) -> bool {
         // TODO: Change Resolving to Environment based
-        let exact_range = resolve_range(self, &env.unwrap().base).unwrap();
-        let exact_date = resolve_date(value, &env.unwrap().base.date).unwrap();
+        let exact_range = resolve_range(self, env.unwrap()).unwrap();
+        let exact_date = resolve_date(value, env.unwrap()).unwrap();
         exact_range.check(&exact_date, env)
     }
 }

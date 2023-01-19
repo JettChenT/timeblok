@@ -2,7 +2,7 @@ use std::any::Any;
 
 use crate::filter::Filter;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum NumVal{
     Number(i64),
     Unsure
@@ -13,8 +13,6 @@ pub struct NumRange{
     pub start:NumVal,
     pub end:NumVal
 }
-
-
 
 #[derive(Debug)]
 pub enum Range{
@@ -66,7 +64,7 @@ pub struct DateTime {
     pub tz: Option<TimeZoneChoice>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExactDateTime{
     pub date: ExactDate,
     pub time: ExactTime,
@@ -86,7 +84,7 @@ pub struct FlexDate{
     pub day: FlexField,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Date {
     pub year:NumVal,
     pub month:NumVal,
@@ -100,14 +98,14 @@ pub struct ExactDate{
     pub day: u32
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Tod {
     // Add support for resolving
     AM,
     PM
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Time {
     pub hour:NumVal,
     pub minute:NumVal,
