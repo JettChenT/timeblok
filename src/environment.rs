@@ -51,7 +51,7 @@ fn max_fit_date(env: &Environment) -> Option<Date>{
             if let Number(day) = date.day {
                 cur.date.day = day as u32;
             }
+            DateTime::from_exact(cur).date
         }
     }
-    *date
 }

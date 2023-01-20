@@ -160,3 +160,23 @@ pub struct FlexEvents{
     pub occasion: FlexOccasion,
     pub events: Vec<Event>
 }
+
+
+impl DateTime {
+    pub fn from_exact(exact: ExactDateTime) -> Self {
+        DateTime {
+            date: Some(Date{
+                year: NumVal::Number(exact.date.year as i64),
+                month: NumVal::Number(exact.date.month as i64),
+                day: NumVal::Number(exact.date.day as i64)
+            }),
+            time: Some(Time{
+                hour: NumVal::Number(exact.time.hour as i64),
+                minute: NumVal::Number(exact.time.minute as i64),
+                second: NumVal::Number(exact.time.second as i64),
+                tod: None
+            }),
+            tz: Some(exact.tz)
+        }
+    }
+}
