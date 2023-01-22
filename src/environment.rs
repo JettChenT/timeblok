@@ -1,4 +1,3 @@
-use std::thread::current;
 use crate::ir::{Date, DateTime, ExactDateTime, NumVal};
 use crate::ir::NumVal::Number;
 
@@ -39,7 +38,7 @@ impl Environment {
 fn max_fit_date(env: &Environment) -> Option<Date>{
     let date = &env.current.date;
     match date {
-        None => {return max_fit_date(env.parent.as_ref().unwrap());}
+        None => {max_fit_date(env.parent.as_ref().unwrap())}
         Some(date) => {
             let mut cur = env.date_time.clone();
             if let Number(year) = date.year {

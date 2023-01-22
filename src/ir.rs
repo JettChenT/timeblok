@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use crate::filter::Filter;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]

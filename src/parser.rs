@@ -2,16 +2,14 @@ use std::fmt::Debug;
 
 use anyhow::Result;
 use anyhow::anyhow;
-use clap::Error;
 use lazy_static::lazy_static;
 use pest::iterators::{Pair, Pairs};
-use pest::pratt_parser::{PrattParser, PrattParserMap};
+use pest::pratt_parser::{PrattParser};
 use pest_derive::Parser;
 use crate::filter;
 use crate::filter::BDF;
 use crate::filter::BinFilt;
 use crate::filter::ExcludeFilt;
-use crate::filter::Filter;
 use crate::ir::*;
 use crate::ir::Range::AllDay;
 
@@ -272,7 +270,7 @@ lazy_static!{
 }
 
 pub fn parse_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
-    let mut pairs = pair.into_inner();
+    let pairs = pair.into_inner();
     PRATT_PARSER
         .map_primary(|primary| match primary.as_rule(){
             Rule::FILTER => parse_date_filter(primary),
