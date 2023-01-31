@@ -178,3 +178,13 @@ impl DateTime {
         }
     }
 }
+
+impl Date{
+    pub fn new() -> Self {
+        Date{
+            year: NumVal::Unsure,
+            month: NumVal::Unsure,
+            day: NumVal::Unsure
+        }
+    }
+}

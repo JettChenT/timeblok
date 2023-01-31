@@ -40,17 +40,17 @@ fn max_fit_date(env: &Environment) -> Option<Date>{
     match date {
         None => {max_fit_date(env.parent.as_ref().unwrap())}
         Some(date) => {
-            let mut cur = env.date_time.clone();
+            let mut ndate = Date::new();
             if let Number(year) = date.year {
-                cur.date.year = year as i32;
+                ndate.year = Number(year);
             }
             if let Number(month) = date.month {
-                cur.date.month = month as u32;
+                ndate.month = Number(month);
             }
             if let Number(day) = date.day {
-                cur.date.day = day as u32;
+                ndate.day = Number(day);
             }
-            DateTime::from_exact(cur).date
+            Some(ndate)
         }
     }
 }
