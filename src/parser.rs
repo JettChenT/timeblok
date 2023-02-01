@@ -1,17 +1,17 @@
 use std::fmt::Debug;
 
-use anyhow::Result;
-use anyhow::anyhow;
-use lazy_static::lazy_static;
-use pest::iterators::{Pair, Pairs};
-use pest::pratt_parser::{PrattParser};
-use pest_derive::Parser;
 use crate::filter;
-use crate::filter::BDF;
 use crate::filter::BinFilt;
 use crate::filter::ExcludeFilt;
-use crate::ir::*;
+use crate::filter::BDF;
 use crate::ir::Range::AllDay;
+use crate::ir::*;
+use anyhow::anyhow;
+use anyhow::Result;
+use lazy_static::lazy_static;
+use pest::iterators::{Pair, Pairs};
+use pest::pratt_parser::PrattParser;
+use pest_derive::Parser;
 
 #[derive(Parser)]
 #[grammar = "blok.pest"]
@@ -36,9 +36,7 @@ pub fn parse_file(pair: Pair<Rule>) -> Result<Vec<Record>> {
     let mut records = vec![];
     for record in pair.into_inner() {
         match record.as_rule() {
-            Rule::RECORD => {
-                records.push(parse_record(record)?)
-            }
+            Rule::RECORD => records.push(parse_record(record)?),
             _ => {
                 return Err(anyhow!("Invalid record"));
             }
@@ -54,26 +52,24 @@ pub fn parse_record(pair: Pair<Rule>) -> Result<Record> {
         Rule::EVENT => {
             let event = parse_event(record)?;
             Ok(Record::Event(event))
-        },
+        }
         Rule::OCCASION => {
             let occasion = parse_occasion(record)?;
             Ok(Record::Occasion(occasion))
-        },
+        }
         Rule::NOTE_LINE => {
             let note = parse_note(record);
             Ok(Record::Note(note.to_string()))
-        },
-        Rule::FLEX_OCCASION=>{
+        }
+        Rule::FLEX_OCCASION => {
             let occasion = parse_flex_occasion(record)?;
             Ok(Record::FlexOccasion(occasion))
-        },
+        }
         Rule::FLEX_EVENTS => {
             let flex_events = parse_flex_events(record)?;
             Ok(Record::FlexEvents(flex_events))
         }
-        _ => {
-            Err(anyhow!(format!("Invalid record: {:?}", record)))
-        }
+        _ => Err(anyhow!(format!("Invalid record: {:?}", record))),
     }
 }
 
@@ -88,12 +84,12 @@ fn parse_flex_events(pair: Pair<Rule>) -> Result<FlexEvents> {
                 let event = parse_event(nxt)?;
                 events.push(event);
             }
-            _ => unreachable!("Invalid rule")
+            _ => unreachable!("Invalid rule"),
         }
     }
-    Ok(FlexEvents{
+    Ok(FlexEvents {
         occasion: condition,
-        events
+        events,
     })
 }
 
@@ -102,43 +98,39 @@ fn parse_occasion(pair: Pair<Rule>) -> Result<DateTime> {
     let pair = get_next!(pairs);
     match pair.as_rule() {
         Rule::DATETIME => {
-            let date:Date = parse_date(pair)?;
-            let time:Time = get_match!(parse_time, pairs)?;
+            let date: Date = parse_date(pair)?;
+            let time: Time = get_match!(parse_time, pairs)?;
             Ok(DateTime {
                 date: Some(date),
                 time: Some(time),
                 ..Default::default()
             })
-        },
+        }
         Rule::DATE => {
             // let mut pairs = pair.into_inner();
-            let date:Date = parse_date(pair)?;
+            let date: Date = parse_date(pair)?;
             Ok(DateTime {
                 date: Some(date),
                 ..Default::default()
             })
-        },
+        }
         Rule::TIME => {
-            let time:Time = parse_time(pair)?;
+            let time: Time = parse_time(pair)?;
             Ok(DateTime {
                 time: Some(time),
                 ..Default::default()
             })
-        },
-        _ => Err(anyhow!("Invalid occasion"))
+        }
+        _ => Err(anyhow!("Invalid occasion")),
     }
 }
 
 fn parse_date(pair: Pair<Rule>) -> Result<Date> {
     let mut pairs = pair.into_inner();
     let year = get_match!(parse_numval, pairs)?;
-    let month= get_match!(parse_numval, pairs)?;
-    let day= get_match!(parse_numval, pairs)?;
-    Ok(Date {
-        year,
-        month,
-        day
-    })
+    let month = get_match!(parse_numval, pairs)?;
+    let day = get_match!(parse_numval, pairs)?;
+    Ok(Date { year, month, day })
 }
 
 fn parse_time(pair: Pair<Rule>) -> Result<Time> {
@@ -148,7 +140,7 @@ fn parse_time(pair: Pair<Rule>) -> Result<Time> {
         hour,
         minute: NumVal::Unsure,
         second: NumVal::Unsure,
-        tod: None
+        tod: None,
     };
     if let Some(r) = pairs.peek() {
         match r.as_rule() {
@@ -157,11 +149,11 @@ fn parse_time(pair: Pair<Rule>) -> Result<Time> {
                 if let Some(r) = pairs.next() {
                     res.tod = Some(parse_tod(r)?);
                 }
-            },
+            }
             Rule::TOD => {
                 res.tod = Some(get_match!(parse_tod, pairs)?);
-            },
-            _ => {Err(anyhow!("Invalid time"))?}
+            }
+            _ => Err(anyhow!("Invalid time"))?,
         }
     };
     Ok(res)
@@ -172,14 +164,14 @@ pub fn parse_tod(pair: Pair<Rule>) -> Result<Tod> {
     match get_next!(inner).as_rule() {
         Rule::AM => Ok(Tod::AM),
         Rule::PM => Ok(Tod::PM),
-        _ => Err(anyhow!("Invalid TOD"))
+        _ => Err(anyhow!("Invalid TOD")),
     }
 }
 
 pub fn parse_event(pair: Pair<Rule>) -> Result<Event> {
     // not quite sure if turn into pairs before or after function execution
     let mut pairs = pair.into_inner();
-    let mut event:Event = {
+    let mut event: Event = {
         let raw = get_next!(pairs);
         parse_event_header(raw)?
     };
@@ -212,54 +204,43 @@ fn parse_event_header(pair: Pair<Rule>) -> Result<Event> {
     Ok(Event {
         range: timerange,
         name,
-        notes:None
+        notes: None,
     })
 }
 
 fn parse_timerange(pair: Pair<Rule>) -> Result<Range> {
-    match pair.as_rule(){
+    match pair.as_rule() {
         Rule::RANGE => {
             let mut pairs = pair.into_inner();
             let start = get_match!(parse_occasion, pairs)?;
             let end = get_match!(parse_occasion, pairs)?;
-            Ok(
-                Range::TimeRange(
-                    TimeRange {
-                        start,
-                        end
-                    }
-                )
-            )
-        },
+            Ok(Range::TimeRange(TimeRange { start, end }))
+        }
         Rule::OCCASION => {
             let occasion = parse_occasion(pair)?;
             match occasion.time {
-                Some(_) => {
-                    Ok(Range::Duration(Duration{
-                        start: occasion,
-                        duration: NumVal::Unsure
-                    }))
+                Some(_) => Ok(Range::Duration(Duration {
+                    start: occasion,
+                    duration: NumVal::Unsure,
+                })),
+                None => match occasion.date {
+                    None => return Err(anyhow!("Invalid occasion")),
+                    Some(date) => Ok(AllDay(date)),
                 },
-                None => {
-                    match occasion.date {
-                        None => {return Err(anyhow!("Invalid occasion"))},
-                        Some(date) => {Ok(AllDay(date))}
-                    }
-                }
             }
-        },
-        _ => Err(anyhow!("Invalid Time Range for Event!"))
+        }
+        _ => Err(anyhow!("Invalid Time Range for Event!")),
     }
 }
 
 fn parse_numval(pair: Pair<Rule>) -> Result<NumVal> {
-    Ok(match pair.as_str().parse::<i64>(){
+    Ok(match pair.as_str().parse::<i64>() {
         Ok(n) => NumVal::Number(n),
-        _ => NumVal::Unsure
+        _ => NumVal::Unsure,
     })
 }
 
-lazy_static!{
+lazy_static! {
     static ref PRATT_PARSER: PrattParser<Rule> = {
         use pest::pratt_parser::{Assoc::*, Op};
         use Rule::*;
@@ -272,31 +253,39 @@ lazy_static!{
 pub fn parse_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
     let pairs = pair.into_inner();
     PRATT_PARSER
-        .map_primary(|primary| match primary.as_rule(){
+        .map_primary(|primary| match primary.as_rule() {
             Rule::FILTER => parse_date_filter(primary),
             Rule::UNIT_DATE_FILTER => parse_date_filter(primary),
             Rule::DATE_FILTER => parse_date_filter(primary),
             Rule::RANGE => {
                 let trange = parse_timerange(primary)?;
                 Ok(Box::new(trange) as BDF<Date>)
-            },
-            _ => todo!()
+            }
+            _ => todo!(),
         })
-        .map_infix(|lhs, op, rhs|{
+        .map_infix(|lhs, op, rhs| {
             let lhs = lhs?;
             let rhs = rhs?;
             match op.as_rule() {
-                Rule::OR => Ok(Box::new(BinFilt{lhs,rhs,op:filter::Op::OR})),
-                Rule::AND => Ok(Box::new(BinFilt{lhs,rhs,op:filter::Op::AND})),
-                _ => unreachable!("Invalid infix rule")
+                Rule::OR => Ok(Box::new(BinFilt {
+                    lhs,
+                    rhs,
+                    op: filter::Op::OR,
+                })),
+                Rule::AND => Ok(Box::new(BinFilt {
+                    lhs,
+                    rhs,
+                    op: filter::Op::AND,
+                })),
+                _ => unreachable!("Invalid infix rule"),
             }
         })
         .map_prefix(|op, rhs| match op.as_rule() {
             Rule::NOT => {
                 let target = rhs?;
-                Ok(Box::new(ExcludeFilt{target}))
-            },
-            _ => unreachable!()
+                Ok(Box::new(ExcludeFilt { target }))
+            }
+            _ => unreachable!(),
         })
         .parse(pairs)
 }
@@ -309,8 +298,7 @@ pub fn parse_flex_occasion(pair: Pair<Rule>) -> Result<FlexOccasion> {
         Rule::DATE_FILTER => {
             let filter = parse_date_filter(fst)?;
             Ok(FlexOccasion::Filter(filter))
-        },
-        sth => unreachable!("Invalid flex occasion rule: {:?}", sth)
+        }
+        sth => unreachable!("Invalid flex occasion rule: {:?}", sth),
     }
 }
-    

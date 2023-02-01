@@ -1,17 +1,16 @@
-use crate::ir::*;
-use std::time::SystemTime;
-use anyhow::{Result, anyhow};
-use chrono::{Datelike, prelude as cr, Timelike};
-use chrono::Local;
-use crate::ir::NumVal::{Number, Unsure};
 use crate::environment::Environment;
-
+use crate::ir::NumVal::{Number, Unsure};
+use crate::ir::*;
+use anyhow::{anyhow, Result};
+use chrono::Local;
+use chrono::{prelude as cr, Datelike, Timelike};
+use std::time::SystemTime;
 
 // TODO: Change all resolve to Result<> based
 
 pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
-    let base_time:cr::DateTime<Local> = created.into();
-    let base_t  = ExactDateTime {
+    let base_time: cr::DateTime<Local> = created.into();
+    let base_t = ExactDateTime {
         date: {
             let date = base_time.date_naive();
             ExactDate {
@@ -30,14 +29,14 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
         tz: TimeZoneChoice::Local,
     };
     let mut base = Environment {
-        current: DateTime{
-            date: Some(Date{
+        current: DateTime {
+            date: Some(Date {
                 year: Number(base_t.date.year as i64),
                 month: Unsure,
                 day: Unsure,
             }),
             time: None,
-            tz: None
+            tz: None,
         },
         date_time: base_t,
         parent: None,
@@ -58,12 +57,12 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 // PERFORMANCE: update base inplace
                 match fixed_occasion {
                     Ok(o) => {
-                        base = Environment{
+                        base = Environment {
                             date_time: o,
                             parent: Some(Box::new(base)),
-                            current: occasion
+                            current: occasion,
                         };
-                    },
+                    }
                     Err(e) => eprintln!("Error resolving occasion: {}", e),
                 }
             }
@@ -105,48 +104,53 @@ pub fn resolve_time(time: &Time, base: &Environment) -> Result<ExactTime> {
     let base_time = base.date_time.time;
     Ok(ExactTime {
         hour: match time.hour {
-            Number(n) => (match &time.tod {
-                Some(tod) => {
-                    if n>12 {
-                        return Err(anyhow!("Hour value cannot exceed 12 when AM/PM is specified(found: {})", n));
-                    }
-                    if n==12 {
-                        match tod {
-                            Tod::AM => 0,
-                            Tod::PM => 12,
+            Number(n) => {
+                (match &time.tod {
+                    Some(tod) => {
+                        if n > 12 {
+                            return Err(anyhow!(
+                                "Hour value cannot exceed 12 when AM/PM is specified(found: {})",
+                                n
+                            ));
                         }
-                    } else {
-                        match tod {
-                            Tod::AM => n,
-                            Tod::PM => n+12,
+                        if n == 12 {
+                            match tod {
+                                Tod::AM => 0,
+                                Tod::PM => 12,
+                            }
+                        } else {
+                            match tod {
+                                Tod::AM => n,
+                                Tod::PM => n + 12,
+                            }
                         }
                     }
-                },
-                None => {
-                    if n>23 {
-                        return Err(anyhow!("Hour value cannot exceed 23(found: {})", n));
+                    None => {
+                        if n > 23 {
+                            return Err(anyhow!("Hour value cannot exceed 23(found: {})", n));
+                        }
+                        n
                     }
-                    n
-                },
-            }) as u32,
+                }) as u32
+            }
             _ => base_time.hour,
         },
         minute: match time.minute {
             Number(n) => {
-                if n>59 {
+                if n > 59 {
                     return Err(anyhow!("Minute value cannot exceed 59(found: {})", n));
                 }
                 n as u32
-            },
+            }
             _ => base_time.minute,
         },
         second: match time.second {
             Number(n) => {
-                if n>59 {
+                if n > 59 {
                     return Err(anyhow!("Second value cannot exceed 59(found: {})", n));
                 }
                 n as u32
-            },
+            }
             _ => base_time.second,
         },
     })
@@ -170,7 +174,6 @@ pub fn resolve_date(date: &Date, base: &Environment) -> Result<ExactDate> {
     };
     Ok(res)
 }
-
 
 pub fn resolve_event(event: &Event, base: &Environment) -> Result<ExactEvent> {
     Ok(ExactEvent {
@@ -198,7 +201,7 @@ pub fn resolve_range(range: &Range, base: &Environment) -> Result<ExactRange> {
                 Number(n) => n,
                 _ => 30,
             });
-            let end_ch = start.to_chrono()?+shift;
+            let end_ch = start.to_chrono()? + shift;
             let end = ExactDateTime::from_chrono(end_ch);
             ExactRange::TimeRange(ExactTimeRange { start, end })
         }
@@ -209,7 +212,9 @@ pub fn resolve_duration(duration: &Duration, base: &Environment) -> Result<Exact
     let start = resolve_occasion(&duration.start, base)?;
     let dur = match duration.duration {
         Number(n) => {
-            if n<0 { return Err(anyhow!("Duration cannot be negative")) }
+            if n < 0 {
+                return Err(anyhow!("Duration cannot be negative"));
+            }
             n as u64
         }
         _ => 30,
