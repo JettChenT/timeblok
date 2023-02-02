@@ -83,8 +83,8 @@ impl Filter<ExactDate> for ExactRange {
         match self {
             ExactRange::TimeRange(tr) => {
                 // unwrap or return false
-                let start = tr.start.to_chrono().unwrap().date_naive();
-                let end = tr.end.to_chrono().unwrap().date_naive();
+                let start = tr.start.date.to_chrono().unwrap();
+                let end = tr.end.date.to_chrono().unwrap();
                 let target = value.to_chrono().unwrap();
                 target >= start && target <= end
             }
@@ -175,12 +175,15 @@ mod tests {
     #[test]
     fn test_time_range(){
         let trange = TimeRange{
-            start: DateTime::from_ymd_hms(2020, 1, 1, 0, 0, 0),
-            end: DateTime::from_ymd_hms(2020, 1, 1, 23, 59, 59),
+            start: DateTime::from_ymd(2020, 1, 3),
+            end: DateTime::from_ymd(2020, 2, 1)
         };
+        eprintln!("{:?}", trange);
         let range = Range::TimeRange(trange);
-
-    }
+        let env = Environment::new(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
+        assert!(range.check(&Date::from_ymd(2020, 1, 3), Some(&env)));
+        assert!(!range.check(&Date::from_ymd(2020, 1, 2), Some(&env)));
+        assert!(range.check(&Date::from_ymd(2020, 2, 1), Some(&env)));
     }
     #[test]
     fn test_tree() {

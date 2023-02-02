@@ -24,6 +24,13 @@ pub struct EnvIterator {
 }
 
 impl Environment {
+    pub fn new(dt: ExactDateTime) -> Self{
+        Environment{
+            current: DateTime::from_exact(&dt),
+            date_time: dt,
+            parent: None,
+        }
+    }
     fn get_loc(&self, i: usize) -> Option<NumVal> {
         match i {
             0 => Some(self.current.date?.year),

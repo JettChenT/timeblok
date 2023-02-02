@@ -161,7 +161,7 @@ pub struct FlexEvents {
 }
 
 impl DateTime {
-    pub fn from_exact(exact: ExactDateTime) -> Self {
+    pub fn from_exact(exact: &ExactDateTime) -> Self {
         DateTime {
             date: Some(Date {
                 year: NumVal::Number(exact.date.year as i64),
@@ -207,6 +207,24 @@ impl DateTime {
     }
 }
 
+impl ExactDateTime{
+    pub fn from_ymd_hms(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> Self {
+        ExactDateTime {
+            date: ExactDate {
+                year,
+                month,
+                day,
+            },
+            time: ExactTime {
+                hour,
+                minute,
+                second,
+            },
+            tz: TimeZoneChoice::Local,
+        }
+    }
+}
+
 impl Date {
     pub fn new() -> Self {
         use NumVal::Unsure;
@@ -231,6 +249,15 @@ impl Date {
         match (self.year, self.month, self.day) {
             (Number(y), Number(m), Number(d)) => Some(NaiveDate::from_ymd_opt(y as i32, m as u32, d as u32)?),
             _ => None,
+        }
+    }
+
+    pub fn from_ymd(year: i32, month: u32, day: u32) -> Self {
+        use NumVal::Number;
+        Date {
+            year: Number(year as i64),
+            month: Number(month as i64),
+            day: Number(day as i64),
         }
     }
 }
