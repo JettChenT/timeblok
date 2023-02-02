@@ -75,8 +75,27 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 todo!()
             }
             Record::FlexEvents(flex_events) => {
-                eprintln!("{:?}", flex_events);
-                todo!()
+                match &flex_events.occasion{
+                    FlexOccasion::Filter(filter) => {
+                        for date in base.clone().into_iter(){
+                            let mut tmp_env = base.clone();
+                            tmp_env.current = DateTime{
+                                date: Some(date),
+                                tz: None,
+                                time: None
+                            };
+                            tmp_env.date_time.date = resolve_date(&date, &base).unwrap();
+                            tmp_env.parent = Some(Box::new(base.clone()));
+                            if filter.check(&date, Some(&base)){
+                                for event in &flex_events.events{
+                                    if let Ok(res) = resolve_event(event, &tmp_env){
+                                        resolved.push(ExactRecord::Event(res));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

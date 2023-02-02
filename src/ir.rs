@@ -56,7 +56,7 @@ pub enum TimeZoneChoice {
     Utc,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct DateTime {
     pub date: Option<Date>,
     pub time: Option<Time>,
@@ -83,7 +83,7 @@ pub struct FlexDate {
     pub day: FlexField,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Date {
     pub year: NumVal,
     pub month: NumVal,
@@ -175,6 +175,34 @@ impl DateTime {
                 tod: None,
             }),
             tz: Some(exact.tz),
+        }
+    }
+
+    pub fn from_ymd_hms(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> Self {
+        DateTime {
+            date: Some(Date {
+                year: NumVal::Number(year as i64),
+                month: NumVal::Number(month as i64),
+                day: NumVal::Number(day as i64),
+            }),
+            time: Some(Time {
+                hour: NumVal::Number(hour as i64),
+                minute: NumVal::Number(minute as i64),
+                second: NumVal::Number(second as i64),
+                tod: None,
+            }),
+            tz: Some(TimeZoneChoice::Local),
+        }
+    }
+    pub fn from_ymd(year: i32, month: u32, day: u32) -> Self {
+        DateTime {
+            date: Some(Date {
+                year: NumVal::Number(year as i64),
+                month: NumVal::Number(month as i64),
+                day: NumVal::Number(day as i64),
+            }),
+            time: None,
+            tz: Some(TimeZoneChoice::Local),
         }
     }
 }

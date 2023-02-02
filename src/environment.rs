@@ -8,6 +8,7 @@ use chrono::NaiveDate;
 use std::thread::current;
 use std::vec::IntoIter;
 
+#[derive(Debug, Clone)]
 pub struct Environment {
     pub date_time: ExactDateTime,
     pub parent: Option<Box<Environment>>,
@@ -110,6 +111,55 @@ impl IntoIterator for Environment {
             cur_date,
             filter: filter as BDF<ExactDate>,
             fit_date,
+        }
+    }
+}
+
+mod tests{
+    use crate::ir::ExactTime;
+    use crate::ir::NumVal::Unsure;
+    use super::*;
+    #[test]
+    fn test_env(){
+        use super::*;
+        let env = Environment{
+            date_time: ExactDateTime{
+                date: ExactDate{
+                    year: 2023,
+                    month: 1,
+                    day: 1,
+                },
+                time: ExactTime{
+                    hour: 1,
+                    minute: 1,
+                    second: 1,
+                },
+                tz: TimeZoneChoice::Utc,
+            },
+            parent: None,
+            current: DateTime{
+                date: Some(Date{
+                    year: Number(2023),
+                    month: Number(1),
+                    day: Unsure,
+                }),
+                time: Some(Time{
+                    hour: Number(0),
+                    minute: Number(0),
+                    second: Number(0),
+                    tod: None,
+                }),
+                tz: None,
+            },
+        };
+        let mut daynum= 1;
+        for date in env.into_iter(){
+            assert_eq!(date, Date{
+                year: Number(2023),
+                month: Number(1),
+                day: Number(daynum),
+            });
+            daynum+=1;
         }
     }
 }

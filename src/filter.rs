@@ -122,6 +122,8 @@ impl Filter<ExactDate> for FlexDate {
 // Add a unit test for filters
 // Thank you copilot
 mod tests {
+    use crate::ir::Range;
+    use crate::ir::TimeRange;
     use super::*;
     #[test]
     fn test_flex_date() {
@@ -170,6 +172,16 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn test_time_range(){
+        let trange = TimeRange{
+            start: DateTime::from_ymd_hms(2020, 1, 1, 0, 0, 0),
+            end: DateTime::from_ymd_hms(2020, 1, 1, 23, 59, 59),
+        };
+        let range = Range::TimeRange(trange);
+
+    }
+    }
     #[test]
     fn test_tree() {
         // Testing combined filters
