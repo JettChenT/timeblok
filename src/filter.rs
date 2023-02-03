@@ -137,12 +137,12 @@ mod tests {
     #[test]
     fn test_flex_date() {
         let fd = FlexDate {
-            year: FlexField::NumVal(Number(2023)),
-            month: FlexField::NumRange(NumRange {
+            year: Box::new(Number(2023)),
+            month: Box::new(NumRange {
                 start: Number(6),
                 end: Number(10),
             }),
-            day: FlexField::NumRange(NumRange {
+            day: Box::new(NumRange {
                 start: Number(8),
                 end: Number(15),
             }),
