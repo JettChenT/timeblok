@@ -119,6 +119,15 @@ impl Filter<ExactDate> for FlexDate {
     }
 }
 
+impl Filter<Date> for FlexDate {
+    fn check(&self, value: &Date, env: Option<&Environment>) -> bool {
+        let exact_date = resolve_date(value, env.unwrap()).unwrap();
+        self.year.check(&Number(exact_date.year as i64), env)
+            && self.month.check(&Number(exact_date.month as i64), env)
+            && self.day.check(&Number(exact_date.day as i64), env)
+    }
+}
+
 // Add a unit test for filters
 // Thank you copilot
 mod tests {

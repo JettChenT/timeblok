@@ -99,9 +99,9 @@ impl IntoIterator for Environment {
     fn into_iter(self) -> Self::IntoIter {
         let fit_date = max_fit_date(&self).unwrap();
         let filter = Box::new(FlexDate {
-            day: FlexField::NumVal(fit_date.day),
-            month: FlexField::NumVal(fit_date.month),
-            year: FlexField::NumVal(fit_date.year),
+            day: Box::new(FlexField::NumVal(fit_date.day)) as BDF<NumVal>,
+            month: Box::new(FlexField::NumVal(fit_date.month)) as BDF<NumVal>,
+            year: Box::new( FlexField::NumVal(fit_date.year)) as BDF<NumVal>,
         });
         let filldat = |n:NumVal| match n {
             Number(n) => n,

@@ -1,4 +1,4 @@
-use crate::filter::Filter;
+use crate::filter::{BDF, Filter};
 use chrono::{Datelike, NaiveDate};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -78,9 +78,9 @@ pub enum FlexField {
 
 #[derive(Debug)]
 pub struct FlexDate {
-    pub year: FlexField,
-    pub month: FlexField,
-    pub day: FlexField,
+    pub year: BDF<NumVal>,
+    pub month: BDF<NumVal>,
+    pub day: BDF<NumVal>,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
