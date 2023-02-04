@@ -17,6 +17,7 @@ mod ir;
 mod output;
 mod parser;
 mod resolver;
+mod preset;
 
 use crate::output::warn;
 use converter::to_ical;

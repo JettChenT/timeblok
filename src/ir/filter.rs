@@ -189,7 +189,7 @@ mod tests {
         };
         eprintln!("{:?}", trange);
         let range = Range::TimeRange(trange);
-        let env = Environment::new(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
+        let env = Environment::from_exact(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
         assert!(range.check(&Date::from_ymd(2020, 1, 3), Some(&env)));
         assert!(!range.check(&Date::from_ymd(2020, 1, 2), Some(&env)));
         assert!(range.check(&Date::from_ymd(2020, 2, 1), Some(&env)));

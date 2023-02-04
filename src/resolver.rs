@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use chrono::Local;
 use chrono::{prelude as cr, Datelike, Timelike};
 use std::time::SystemTime;
+use crate::preset::insert_preset;
 
 // TODO: Change all resolve to Result<> based
 
@@ -29,19 +30,24 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
         },
         tz: TimeZoneChoice::Local,
     };
-    let mut base = Environment {
-        current: DateTime {
+
+    let mut base = {
+        let tyear = base_t.date.year;
+        Environment::new(
+        base_t,
+        DateTime {
             date: Some(Date {
-                year: Number(base_t.date.year as i64),
+                year: Number(tyear as i64),
                 month: Unsure,
                 day: Unsure,
             }),
             time: None,
             tz: None,
         },
-        date_time: base_t,
-        parent: None,
-    };
+        None,
+    )};
+
+    insert_preset(&mut base).unwrap();
 
     let mut resolved = vec![];
     let mut baseref = Rc::new(base);
@@ -59,11 +65,11 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 // PERFORMANCE: update base inplace
                 match fixed_occasion {
                     Ok(o) => {
-                        base = Environment {
-                            date_time: o,
-                            parent: Some(Rc::clone(&baseref)),
-                            current: occasion,
-                        };
+                        base = Environment::new(
+                            o,
+                            occasion,
+                            Some(Rc::clone(&baseref)),
+                        );
                         baseref = Rc::new(base);
                     }
                     Err(e) => eprintln!("Error resolving occasion: {}", e),
@@ -81,13 +87,8 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 match &flex_events.occasion{
                     FlexOccasion::Filter(filter) => {
                         for date in (*baseref).iter(){
-                            let mut tmp_env = Environment{
-                                current: DateTime{
-                                    date: Some(date),
-                                    time: None,
-                                    tz: None,
-                                },
-                                date_time: ExactDateTime{
+                            let tmp_env = Environment::new(
+                                ExactDateTime{
                                     date: resolve_date(&date, &(*baseref)).unwrap(),
                                     time: ExactTime{
                                         hour: 0,
@@ -95,9 +96,13 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                                         second: 0,
                                     },
                                     tz: TimeZoneChoice::Local,
+                                },DateTime{
+                                    date: Some(date),
+                                    time: None,
+                                    tz: None,
                                 },
-                                parent: Some(Rc::clone(&baseref)),
-                            };
+                                Some(Rc::clone(&baseref)),
+                            );
                             if filter.check(&date, Some(&(*baseref))){
                                 for event in &flex_events.events{
                                     if let Ok(res) = resolve_event(event, &tmp_env){

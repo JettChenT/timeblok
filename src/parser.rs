@@ -12,6 +12,7 @@ use lazy_static::lazy_static;
 use pest::iterators::{Pair, Pairs};
 use pest::pratt_parser::PrattParser;
 use pest_derive::Parser;
+use crate::ir::ident::{Ident, IdentFilter};
 
 #[derive(Parser)]
 #[grammar = "blok.pest"]
@@ -21,7 +22,9 @@ macro_rules! get_next {
     ($pairs:ident) => {
         match $pairs.next() {
             Some(pair) => pair,
-            None => return Err(anyhow!("Expected Token")),
+            None => {
+                return Err(anyhow!("Expected Token"))
+            },
         }
     };
 }
@@ -255,6 +258,16 @@ fn parse_flex_date(pair: Pair<Rule>) -> Result<FlexDate>{
     Ok(FlexDate { year, month, day })
 }
 
+fn parse_ident(pair: Pair<Rule>) -> Result<Ident> {
+    let name = pair.as_str().to_string();
+    Ok(Ident { name})
+}
+
+fn parse_ident_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
+    let ident = parse_ident(pair)?;
+    Ok(Box::new(IdentFilter{ident}))
+}
+
 lazy_static! {
     static ref PRATT_PARSER: PrattParser<Rule> = {
         use pest::pratt_parser::{Assoc::*, Op};
@@ -272,6 +285,7 @@ pub fn parse_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
             Rule::FILTER => parse_date_filter(primary),
             Rule::UNIT_DATE_FILTER => parse_date_filter(primary),
             Rule::DATE_FILTER => parse_date_filter(primary),
+            Rule::IDENT => parse_ident_date_filter(primary),
             Rule::RANGE => {
                 let trange = parse_timerange(primary)?;
                 Ok(Box::new(trange) as BDF<Date>)
