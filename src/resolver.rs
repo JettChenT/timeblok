@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use crate::environment::Environment;
 use crate::ir::NumVal::{Number, Unsure};
 use crate::ir::*;
@@ -43,25 +44,27 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
     };
 
     let mut resolved = vec![];
+    let mut baseref = Rc::new(base);
     for record in records {
         match record {
             Record::Event(event) => {
-                let event = resolve_event(&event, &base);
+                let event = resolve_event(&event, &(*baseref));
                 match event {
                     Ok(event) => resolved.push(ExactRecord::Event(event)),
                     Err(e) => eprintln!("Error resolving event: {}", e),
                 }
             }
             Record::Occasion(occasion) => {
-                let fixed_occasion = resolve_occasion(&occasion, &base);
+                let fixed_occasion = resolve_occasion(&occasion, &(*baseref));
                 // PERFORMANCE: update base inplace
                 match fixed_occasion {
                     Ok(o) => {
                         base = Environment {
                             date_time: o,
-                            parent: Some(Box::new(base)),
+                            parent: Some(Rc::clone(&baseref)),
                             current: occasion,
                         };
+                        baseref = Rc::new(base);
                     }
                     Err(e) => eprintln!("Error resolving occasion: {}", e),
                 }
@@ -77,16 +80,25 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
             Record::FlexEvents(flex_events) => {
                 match &flex_events.occasion{
                     FlexOccasion::Filter(filter) => {
-                        for date in base.clone().into_iter(){
-                            let mut tmp_env = base.clone();
-                            tmp_env.current = DateTime{
-                                date: Some(date),
-                                tz: None,
-                                time: None
+                        for date in (*baseref).iter(){
+                            let mut tmp_env = Environment{
+                                current: DateTime{
+                                    date: Some(date),
+                                    time: None,
+                                    tz: None,
+                                },
+                                date_time: ExactDateTime{
+                                    date: resolve_date(&date, &(*baseref)).unwrap(),
+                                    time: ExactTime{
+                                        hour: 0,
+                                        minute: 0,
+                                        second: 0,
+                                    },
+                                    tz: TimeZoneChoice::Local,
+                                },
+                                parent: Some(Rc::clone(&baseref)),
                             };
-                            tmp_env.date_time.date = resolve_date(&date, &base).unwrap();
-                            tmp_env.parent = Some(Box::new(base.clone()));
-                            if filter.check(&date, Some(&base)){
+                            if filter.check(&date, Some(&(*baseref))){
                                 for event in &flex_events.events{
                                     if let Ok(res) = resolve_event(event, &tmp_env){
                                         resolved.push(ExactRecord::Event(res));

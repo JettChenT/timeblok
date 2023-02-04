@@ -13,7 +13,6 @@ use std::io::Write;
 mod args;
 mod converter;
 mod environment;
-mod filter;
 mod ir;
 mod output;
 mod parser;

@@ -1,7 +1,9 @@
-use crate::filter::{BDF, Filter};
+use std::collections::HashMap;
+use std::rc::Rc;
+use crate::ir::filter::{BDF, Filter};
 use crate::ir::NumVal::Number;
 use crate::ir::{
-    Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal, Time, TimeZoneChoice,
+    Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal, Time, TimeZoneChoice, ident::Ident
 };
 use crate::resolver::{resolve_date, resolve_time};
 use chrono::NaiveDate;
@@ -11,12 +13,12 @@ use std::vec::IntoIter;
 #[derive(Debug, Clone)]
 pub struct Environment {
     pub date_time: ExactDateTime,
-    pub parent: Option<Box<Environment>>,
+    pub parent: Option<Rc<Environment>>,
     pub current: DateTime,
 }
 
-pub struct EnvIterator {
-    env: Environment,
+pub struct EnvIterator<'a> {
+    env: &'a Environment,
     cur: Date,
     cur_date: NaiveDate,
     filter: BDF<ExactDate>,
@@ -79,7 +81,7 @@ fn max_fit_date(env: &Environment) -> Option<Date> {
     }
 }
 
-impl Iterator for EnvIterator {
+impl Iterator for EnvIterator<'_> {
     type Item = Date;
     fn next(&mut self) -> Option<Self::Item> {
         // This conveniently assumes dates are continuous, don't use for non-continuous filters
@@ -93,10 +95,8 @@ impl Iterator for EnvIterator {
     }
 }
 
-impl IntoIterator for Environment {
-    type Item = Date;
-    type IntoIter = EnvIterator;
-    fn into_iter(self) -> Self::IntoIter {
+impl Environment{
+    pub fn iter(&self) -> EnvIterator {
         let fit_date = max_fit_date(&self).unwrap();
         let filter = Box::new(FlexDate {
             day: Box::new(FlexField::NumVal(fit_date.day)) as BDF<NumVal>,
@@ -160,7 +160,7 @@ mod tests{
             },
         };
         let mut daynum= 1;
-        for date in env.into_iter(){
+        for date in env.iter(){
             assert_eq!(date, Date{
                 year: Number(2023),
                 month: Number(1),
