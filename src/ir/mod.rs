@@ -1,5 +1,8 @@
-use crate::filter::Filter;
 use chrono::{Datelike, NaiveDate};
+use crate::ir::filter::{BDF, Filter};
+
+pub mod filter;
+pub mod ident;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum NumVal {
@@ -78,9 +81,9 @@ pub enum FlexField {
 
 #[derive(Debug)]
 pub struct FlexDate {
-    pub year: FlexField,
-    pub month: FlexField,
-    pub day: FlexField,
+    pub year: BDF<NumVal>,
+    pub month: BDF<NumVal>,
+    pub day: BDF<NumVal>,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

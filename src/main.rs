@@ -13,11 +13,11 @@ use std::io::Write;
 mod args;
 mod converter;
 mod environment;
-mod filter;
 mod ir;
 mod output;
 mod parser;
 mod resolver;
+mod preset;
 
 use crate::output::warn;
 use converter::to_ical;

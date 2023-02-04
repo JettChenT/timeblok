@@ -1,6 +1,7 @@
 SP = _{" "*}
 COMMENT = _{"//"~(!NEWLINE~ANY)*}
 NUM_FIELD = {ASCII_DIGIT+}
+IDENT = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 AND = {"&" | "and"}
 OR = {","|"|" | "or"}
 NOT = {"!" | "not"}
@@ -42,7 +43,8 @@ OCCASION = {DATETIME | DATE | TIME}
 UNIT_DATE_FILTER = {NOT? ~ (
     RANGE|
     FLEX_DATE|
-    DATE_FILTER
+    DATE_FILTER|
+    IDENT
 )}
 
 DATE_FILTER = {

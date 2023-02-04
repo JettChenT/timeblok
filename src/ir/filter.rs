@@ -119,6 +119,15 @@ impl Filter<ExactDate> for FlexDate {
     }
 }
 
+impl Filter<Date> for FlexDate {
+    fn check(&self, value: &Date, env: Option<&Environment>) -> bool {
+        let exact_date = resolve_date(value, env.unwrap()).unwrap();
+        self.year.check(&Number(exact_date.year as i64), env)
+            && self.month.check(&Number(exact_date.month as i64), env)
+            && self.day.check(&Number(exact_date.day as i64), env)
+    }
+}
+
 // Add a unit test for filters
 // Thank you copilot
 mod tests {
@@ -128,12 +137,12 @@ mod tests {
     #[test]
     fn test_flex_date() {
         let fd = FlexDate {
-            year: FlexField::NumVal(Number(2023)),
-            month: FlexField::NumRange(NumRange {
+            year: Box::new(Number(2023)),
+            month: Box::new(NumRange {
                 start: Number(6),
                 end: Number(10),
             }),
-            day: FlexField::NumRange(NumRange {
+            day: Box::new(NumRange {
                 start: Number(8),
                 end: Number(15),
             }),
@@ -180,7 +189,7 @@ mod tests {
         };
         eprintln!("{:?}", trange);
         let range = Range::TimeRange(trange);
-        let env = Environment::new(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
+        let env = Environment::from_exact(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
         assert!(range.check(&Date::from_ymd(2020, 1, 3), Some(&env)));
         assert!(!range.check(&Date::from_ymd(2020, 1, 2), Some(&env)));
         assert!(range.check(&Date::from_ymd(2020, 2, 1), Some(&env)));

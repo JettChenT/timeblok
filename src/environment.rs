@@ -1,22 +1,26 @@
-use crate::filter::{BDF, Filter};
+use std::collections::HashMap;
+use std::rc::Rc;
+use crate::ir::filter::{BDF, Filter};
 use crate::ir::NumVal::Number;
 use crate::ir::{
-    Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal, Time, TimeZoneChoice,
+    Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal, Time, TimeZoneChoice, ident::IdentData
 };
 use crate::resolver::{resolve_date, resolve_time};
 use chrono::NaiveDate;
 use std::thread::current;
 use std::vec::IntoIter;
+use anyhow::{anyhow, Result};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Environment {
     pub date_time: ExactDateTime,
-    pub parent: Option<Box<Environment>>,
+    pub parent: Option<Rc<Environment>>,
     pub current: DateTime,
+    pub namespace: HashMap<String, IdentData>,
 }
 
-pub struct EnvIterator {
-    env: Environment,
+pub struct EnvIterator<'a> {
+    env: &'a Environment,
     cur: Date,
     cur_date: NaiveDate,
     filter: BDF<ExactDate>,
@@ -24,13 +28,44 @@ pub struct EnvIterator {
 }
 
 impl Environment {
-    pub fn new(dt: ExactDateTime) -> Self{
-        Environment{
+    pub fn new(date_time: ExactDateTime, current: DateTime, parent: Option<Rc<Environment>>) -> Self {
+        Environment {
+            date_time: date_time,
+            parent: parent,
+            current: current,
+            namespace: HashMap::new(),
+        }
+    }
+    pub fn from_exact(dt: ExactDateTime) -> Self {
+        Environment {
             current: DateTime::from_exact(&dt),
             date_time: dt,
             parent: None,
+            namespace: HashMap::new()
         }
     }
+
+    pub fn get(&self, name: &str) -> Option<&IdentData> {
+        match self.namespace.get(name) {
+            Some(ident) => Some(ident),
+            None => match &self.parent {
+                Some(parent) => parent.get(name),
+                None => None,
+            }
+        }
+    }
+    
+    pub fn set(&mut self, name: &str, ident: IdentData) -> Result<()>{
+        if self.namespace.contains_key(name) {
+            return Err(anyhow!("Name already exists in current namespace"));
+        }
+        self.namespace.insert(name.to_string(), ident);
+        Ok(())
+    }
+}
+
+impl Environment {
+    // might come in handy later
     fn get_loc(&self, i: usize) -> Option<NumVal> {
         match i {
             0 => Some(self.current.date?.year),
@@ -42,11 +77,11 @@ impl Environment {
             _ => None,
         }
     }
-    pub fn get(&self, i: usize) -> Option<NumVal> {
+    fn get_recurse(&self, i: usize) -> Option<NumVal> {
         match self.get_loc(i) {
             Some(v) => Some(v),
             None => match &self.parent {
-                Some(p) => p.get(i),
+                Some(p) => p.get_recurse(i),
                 None => None,
             },
         }
@@ -79,7 +114,7 @@ fn max_fit_date(env: &Environment) -> Option<Date> {
     }
 }
 
-impl Iterator for EnvIterator {
+impl Iterator for EnvIterator<'_> {
     type Item = Date;
     fn next(&mut self) -> Option<Self::Item> {
         // This conveniently assumes dates are continuous, don't use for non-continuous filters
@@ -93,15 +128,13 @@ impl Iterator for EnvIterator {
     }
 }
 
-impl IntoIterator for Environment {
-    type Item = Date;
-    type IntoIter = EnvIterator;
-    fn into_iter(self) -> Self::IntoIter {
+impl Environment{
+    pub fn iter(&self) -> EnvIterator {
         let fit_date = max_fit_date(&self).unwrap();
         let filter = Box::new(FlexDate {
-            day: FlexField::NumVal(fit_date.day),
-            month: FlexField::NumVal(fit_date.month),
-            year: FlexField::NumVal(fit_date.year),
+            day: Box::new(FlexField::NumVal(fit_date.day)) as BDF<NumVal>,
+            month: Box::new(FlexField::NumVal(fit_date.month)) as BDF<NumVal>,
+            year: Box::new( FlexField::NumVal(fit_date.year)) as BDF<NumVal>,
         });
         let filldat = |n:NumVal| match n {
             Number(n) => n,
@@ -129,38 +162,9 @@ mod tests{
     #[test]
     fn test_env(){
         use super::*;
-        let env = Environment{
-            date_time: ExactDateTime{
-                date: ExactDate{
-                    year: 2023,
-                    month: 1,
-                    day: 1,
-                },
-                time: ExactTime{
-                    hour: 1,
-                    minute: 1,
-                    second: 1,
-                },
-                tz: TimeZoneChoice::Utc,
-            },
-            parent: None,
-            current: DateTime{
-                date: Some(Date{
-                    year: Number(2023),
-                    month: Number(1),
-                    day: Unsure,
-                }),
-                time: Some(Time{
-                    hour: Number(0),
-                    minute: Number(0),
-                    second: Number(0),
-                    tod: None,
-                }),
-                tz: None,
-            },
-        };
+        let env = Environment::from_exact(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
         let mut daynum= 1;
-        for date in env.into_iter(){
+        for date in env.iter(){
             assert_eq!(date, Date{
                 year: Number(2023),
                 month: Number(1),
