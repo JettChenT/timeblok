@@ -56,9 +56,6 @@ impl Environment {
     }
     
     pub fn set(&mut self, name: &str, ident: IdentData) -> Result<()>{
-        if self.namespace.contains_key(name) {
-            return Err(anyhow!("Name already exists in current namespace"));
-        }
         self.namespace.insert(name.to_string(), ident);
         Ok(())
     }
@@ -162,7 +159,7 @@ mod tests{
     #[test]
     fn test_env(){
         use super::*;
-        let env = Environment::from_exact(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
+        let env = Environment::from_exact(ExactDateTime::from_ymd_hms(2023, 1, 1, 1, 1, 1));
         let mut daynum= 1;
         for date in env.iter(){
             assert_eq!(date, Date{

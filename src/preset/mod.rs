@@ -1,3 +1,5 @@
+mod workalendar;
+
 use crate::ir::ident::{DynFilter, IdentData};
 use anyhow::Result;
 use chrono::{Datelike, Weekday};
@@ -30,6 +32,23 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
         };
         env.set(w, IdentData::DateFilter(Box::new(filt)))?;
     }
+    // Insert workday and weekend
+    let workday = DynFilter {
+        filter: Box::new(move |d:&Date, env:Option<&Environment>| {
+            let wkday = resolve_date(d, env.unwrap()).unwrap().weekday().unwrap();
+            wkday != Weekday::Sat && wkday != Weekday::Sun
+        }),
+        name: "workday".to_string(),
+    };
+    env.set("workday", IdentData::DateFilter(Box::new(workday)))?;
+    let weekend = DynFilter {
+        filter: Box::new(move |d:&Date, env:Option<&Environment>| {
+            let wkday = resolve_date(d, env.unwrap()).unwrap().weekday().unwrap();
+            wkday == Weekday::Sat || wkday == Weekday::Sun
+        }),
+        name: "weekend".to_string(),
+    };
+    env.set("weekend", IdentData::DateFilter(Box::new(weekend)))?;
     Ok(())
 }
 
