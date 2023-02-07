@@ -1,3 +1,5 @@
+mod workalendar;
+
 use crate::ir::ident::{DynFilter, IdentData};
 use anyhow::Result;
 use chrono::{Datelike, Weekday};
