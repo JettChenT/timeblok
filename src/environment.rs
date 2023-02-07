@@ -56,9 +56,6 @@ impl Environment {
     }
     
     pub fn set(&mut self, name: &str, ident: IdentData) -> Result<()>{
-        if self.namespace.contains_key(name) {
-            return Err(anyhow!("Name already exists in current namespace"));
-        }
         self.namespace.insert(name.to_string(), ident);
         Ok(())
     }
