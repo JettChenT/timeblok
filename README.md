@@ -31,42 +31,33 @@ When compiled into an .ics file, this could be imported into your calendar.
 
 #### Monthly planning
 ```
-2023-1-
---5
+2023-1- // Locks in the following events to 2023-1
+{--1~--10 and workday} // workdays from jan 1 to jan 10
 7:30am wake up to a new day
 10am ~ 11am work on EvilCorp
-- Gain root access to EvilCorp's servers
-- Do not get caught
 
---10
+{sun}
+4pm weekly review //weekly review every sunday
+
+--11
 8am~10am Resign from EvilCorp
 - Make sure you still have access to the servers
 
--2-
+
+-2- // This overrides the month information from line 1.
 --1
 3pm~4pm Initiate operation "Hack the planet"
 ```
 
-When resolved, this is equivalent to the following events, which will then be compiled to an .ics file:
-```
-2023-1-5 7:30~8:00 wake up to a new day
-2023-1-5 10:00~11:00 work on EvilCorp
-    - Gain root access to EvilCorp's servers
-2023-1-10 8:00~10:00 Resign from EvilCorp
-    - Make sure you still have access to the servers
-2023-2-1 3:00~4:00 Initiate operation "Hack the planet"
-```
-
-... Which could be imported into your digital calendar!
+After resolving, this could be imported into your calendar:
 ![](media/monthlyplan.png)
 
-### Rules (WIP)
-(Correct me if I'm wrong about any terms, I started [Crafting Interpreters](https://craftinginterpreters.com/) a week ago)
-
+### Rules 
 The TimeBlock language currently recognizes three types of statements(by order of precedence):
 - Event
 - Occasion
 - Notes
+- Filters
 
 `Occasion` is any single line that describes a point in time.
 It can be a date, a time, or a date and time.
@@ -79,8 +70,30 @@ A `Note` just a line of text, if it occurs after an Event, it is considered a no
 
 A `Range` is simply a pair of Occasions, separated by a `~`, indicating, well, a time-range.
 
+#### Filters
+`Filters` are a special type of statement that can be used to filter out dates, events, numbers in a specified range.
+Filters can be nested and combined to represent complex logic and recurring events.
 
+In the process of resolving, filters binds to the last specified `Occasion`, iterates through all possible values that fits the occasion, 
+and selects those that fits the criteria for the filter.
 
+For example, consider the following filter:
+```
+-2-
+{--1~--10 and workday}
+```
+This filter bounds to the occasion `-2-`, in which the year of the occasion could be inherited from previous occasions(by default the creation date of the file)
+, and the date is unspecified.
+Thus, the filter will iterate through all possible dates in February. 
+Since the two sub-filters are joined by an `and` clause, the filter will only select those dates that are both in the range `--1~--10` and are workdays.
+
+The following filters are currently supported:
+- Basic logic filters: `and`, `or`, `not`
+- Range filters: filters all dates in a range, eg. `--1~--10` filters all dates with day value 1 to 10 in the inferred year and month
+- Day-of-week filters: `workday`, `weekend`,  `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday` (shorthand `mon` ~ `sun` is also supported)
+- "Flexible date filters": basically a shorthand for range filters, eg. `--{1~10}` is equivalent to `--1~--10`
+
+More filters are planned to be added in the future. (My current priority is to support region specific resolving of workdays based on [workalendar](https://github.com/workalendar/workalendar))
 ## Installation
 Currently, a [Rust](https://www.rust-lang.org/) installation
 is required.
