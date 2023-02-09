@@ -4,9 +4,9 @@
 <a href="https://discord.gg/MXxsyAaeFg"><img alt="discord invitation link" src="https://dcbadge.vercel.app/api/server/MXxsyAaeFg?style=flat"></a>
 
 ```bash
-cargo install timeblok
-nvim plan.txt # Write your plan with your favorite editor!
-timeblok plan.txt -o
+cargo install timeblok                            # install timeblok 
+echo "8am wake up and eat breakfast" > plan.txt   # or use your favorite editor 
+timeblok plan.txt -o                              # open in your favorite calendar app!
 ```
 
 ## What is TimeBlok? 
@@ -87,6 +87,7 @@ The TimeBlock language currently recognizes three types of statements(by order o
 `Occasion` is any single line that describes a point in time, usually dates in `YYYY-MM-DD` format.
 It can be a date, a time, or a date and time.
 Occasions will inherit the not specified fields from the closest previous occasion.
+The first occasion inserted into scope will be the creation date of the target file.
 E.g. If the previous occasion is `2024-3-`, then `--3` will be interpreted as `2024-3-3`.
 
 An `Event` is a line of text that starts with an `Occasion` or `Range` and is followed by text indicating the event's name.
