@@ -4,9 +4,8 @@
 <a href="https://discord.gg/MXxsyAaeFg"><img alt="discord invitation link" src="https://dcbadge.vercel.app/api/server/MXxsyAaeFg?style=flat"></a>
 
 ```bash
-cargo install timeblok                            # install timeblok 
-echo "8am wake up and eat breakfast" > plan.txt   # or use your favorite editor 
-timeblok plan.txt -o                              # open in your favorite calendar app!
+cargo install timeblok  # install timeblok 
+timeblok -no            # create&write a new blok file, and open it in your calendar app! 
 ```
 
 ## What is TimeBlok? 
@@ -75,6 +74,17 @@ $ timeblok input.txt -f output.ics
 Exporting & opening in default calendar application:
 ```bash
 $ timeblok input.txt -o
+```
+
+Create a new plan file and open it in your calendar app:
+```bash
+$ timeblok --new -o
+$ timeblok -no # shorthand
+```
+
+Help:
+```bash
+$ timeblok --help
 ```
 
 ## Specs 

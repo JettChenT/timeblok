@@ -5,7 +5,7 @@ use clap::Parser;
 pub struct Args {
     /// Path to the file to be processed
     #[arg(value_parser)]
-    pub infile: String,
+    pub infile: Option<String>,
     /// Path of the output .ics file
     #[arg(short = 'f', long)]
     pub outfile: Option<String>,
@@ -18,6 +18,10 @@ pub struct Args {
     /// Whether to print the parsed output
     #[arg(long)]
     pub print: bool,
+    /// Create a new file directly
+    /// This takes lower precedence than the `infile` argument
+    #[arg(long, short)]
+    pub new: bool,
 }
 
 pub fn parse() -> Args {

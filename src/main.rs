@@ -4,8 +4,9 @@ extern crate pest_derive;
 extern crate core;
 
 use crate::parser::{parse_file, Rule};
-use anyhow::Result;
-use directories::BaseDirs;
+use anyhow::{Result, anyhow};
+use directories::{BaseDirs, ProjectDirs};
+use edit::edit_file;
 use pest::Parser;
 use std::fs;
 use std::io::Write;
@@ -19,7 +20,6 @@ mod parser;
 mod resolver;
 mod preset;
 
-use crate::output::warn;
 use converter::to_ical;
 use parser::BlokParser;
 use resolver::resolve;
@@ -34,10 +34,37 @@ fn main() {
     }
 }
 
+fn handle_infile(infile: Option<String>, new:bool) -> Result<String>{
+    match infile {
+        Some(s) => Ok(s),
+        None => match new {
+            true => {
+                let cur_date = chrono::Local::now().format("%Y-%m-%d").to_string();
+                let template = format!("{}\n", cur_date);
+                let edited = edit::edit(template)?;
+                if let Some(dir) = ProjectDirs::from("", "", "timeblok"){
+                    let data_dir = dir.data_dir().join("bloks");
+                    fs::create_dir_all(&data_dir)?;
+                    let filename = format!("{}.blok", cur_date);
+                    let path = data_dir.join(filename);
+                    fs::write(&path, edited)?;
+                    let pathstr = path.to_string_lossy().to_string();
+                    eprintln!("File created at {}", &pathstr);
+                    Ok(pathstr)
+                } else {
+                    Err(anyhow!("Could not get data directory"))
+                }
+            },
+            false => Err(anyhow!("No input file specified")),
+        },
+    }
+}
+
 fn try_main(args: args::Args) -> Result<()> {
-    let metadata = fs::metadata(&args.infile)?;
+    let infile = handle_infile(args.infile, args.new)?;
+    let metadata = fs::metadata(&infile)?;
     let created = metadata.created()?;
-    let file = fs::read_to_string(&args.infile).unwrap();
+    let file = fs::read_to_string(&infile).unwrap();
     let file = BlokParser::parse(Rule::FILE, &file)
         .expect("Unsuccessful parse")
         .next()
