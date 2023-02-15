@@ -1,5 +1,7 @@
 mod workalendar;
 
+use std::rc::Rc;
+
 use crate::ir::ident::{DynFilter, IdentData};
 use anyhow::Result;
 use chrono::{Datelike, Weekday};
@@ -25,7 +27,7 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
     for w in weekdays{
         let wkday = w.parse::<Weekday>().unwrap();
         let filt = DynFilter {
-            filter: Box::new(move |d:&Date, env:Option<&Environment>| {
+            filter: Rc::new(move |d:&Date, env:Option<&Environment>| {
                 resolve_date(d, env.unwrap()).unwrap().weekday().unwrap() == wkday
             }),
             name: w.to_string(),
@@ -34,7 +36,7 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
     }
     // Insert workday and weekend
     let workday = DynFilter {
-        filter: Box::new(move |d:&Date, env:Option<&Environment>| {
+        filter: Rc::new(move |d:&Date, env:Option<&Environment>| {
             let wkday = resolve_date(d, env.unwrap()).unwrap().weekday().unwrap();
             wkday != Weekday::Sat && wkday != Weekday::Sun
         }),
@@ -42,7 +44,7 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
     };
     env.set("workday", IdentData::DateFilter(Box::new(workday)))?;
     let weekend = DynFilter {
-        filter: Box::new(move |d:&Date, env:Option<&Environment>| {
+        filter: Rc::new(move |d:&Date, env:Option<&Environment>| {
             let wkday = resolve_date(d, env.unwrap()).unwrap().weekday().unwrap();
             wkday == Weekday::Sat || wkday == Weekday::Sun
         }),

@@ -1,11 +1,13 @@
 use std::fmt::Debug;
 
+use dyn_clone::DynClone;
+
 use crate::environment::Environment;
 use crate::ir::NumVal::{Number, Unsure};
 use crate::ir::*;
 use crate::resolver::{resolve_date, resolve_range};
 
-pub trait Filter<T>: Debug {
+pub trait Filter<T>: Debug+DynClone {
     fn check(&self, value: &T, env: Option<&Environment>) -> bool;
     fn filter(&self, values: Vec<T>, env: Option<&Environment>) -> Vec<T> {
         // PERFORMANCE: Change this to parallel execution, use references and lifetimes to improve memory efficiency
@@ -19,7 +21,9 @@ pub trait Filter<T>: Debug {
     }
 }
 
-#[derive(Debug)]
+dyn_clone::clone_trait_object!(<T> Filter<T>);
+
+#[derive(Debug, Clone)]
 pub enum Op {
     OR,
     AND,
@@ -27,14 +31,14 @@ pub enum Op {
 
 pub type BDF<T> = Box<dyn Filter<T>>;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct BinFilt<T: Debug> {
     pub lhs: BDF<T>,
     pub rhs: BDF<T>,
     pub op: Op,
 }
 
-impl<T: Debug> Filter<T> for BinFilt<T> {
+impl<T: Debug+Clone> Filter<T> for BinFilt<T> {
     fn check(&self, value: &T, env: Option<&Environment>) -> bool {
         match self.op {
             Op::OR => self.lhs.check(value, env) || self.rhs.check(value, env),
@@ -43,12 +47,12 @@ impl<T: Debug> Filter<T> for BinFilt<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct ExcludeFilt<T> {
     pub target: BDF<T>,
 }
 
-impl<T: Debug> Filter<T> for ExcludeFilt<T> {
+impl<T: Debug+Clone> Filter<T> for ExcludeFilt<T> {
     fn check(&self, value: &T, env: Option<&Environment>) -> bool {
         !self.target.check(value, env)
     }

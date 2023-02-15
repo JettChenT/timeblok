@@ -13,20 +13,20 @@ pub enum NumVal {
     Unsure,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NumRange {
     pub start: NumVal,
     pub end: NumVal,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Range {
     TimeRange(TimeRange),
     Duration(Duration),
     AllDay(Date),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExactRange {
     TimeRange(ExactTimeRange),
     AllDay(ExactDate),
@@ -38,19 +38,19 @@ pub struct ExactDuration {
     pub duration: u64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Duration {
     pub start: DateTime,
     pub duration: NumVal,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TimeRange {
     pub start: DateTime,
     pub end: DateTime,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExactTimeRange {
     pub start: ExactDateTime,
     pub end: ExactDateTime,
@@ -76,13 +76,13 @@ pub struct ExactDateTime {
     pub tz: TimeZoneChoice,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FlexField {
     NumVal(NumVal),
     NumRange(NumRange),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FlexDate {
     pub year: BDF<NumVal>,
     pub month: BDF<NumVal>,
