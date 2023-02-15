@@ -1,6 +1,8 @@
 use chrono::{Datelike, NaiveDate};
 use crate::ir::filter::{BDF, Filter};
 
+use self::command::CommandCall;
+
 pub mod filter;
 pub mod ident;
 pub mod command;
@@ -145,6 +147,7 @@ pub enum Record {
     Note(String),
     FlexOccasion(FlexOccasion),
     FlexEvents(FlexEvents),
+    Command(CommandCall)
 }
 
 #[derive(Debug)]
