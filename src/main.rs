@@ -88,7 +88,7 @@ fn try_main(args: args::Args) -> Result<()> {
             }
         }
         _ => {
-            println!("{}", converted);
+            if args.print{println!("{}", converted);}
             if args.open {
                 // Save file in temporary directory and open it
                 let base_dirs = BaseDirs::new().expect("Could not get base directories");

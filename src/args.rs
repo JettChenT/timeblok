@@ -15,7 +15,7 @@ pub struct Args {
     /// Parse only option
     #[arg(long)]
     pub parse_only: bool,
-    /// Whether to print the parsed output
+    /// Whether to print the result ICS file
     #[arg(long)]
     pub print: bool,
     /// Create a new file directly

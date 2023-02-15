@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use crate::ir::command::CommandCall;
 use crate::ir::filter;
 use crate::ir::filter::BinFilt;
 use crate::ir::filter::ExcludeFilt;
@@ -72,6 +73,10 @@ pub fn parse_record(pair: Pair<Rule>) -> Result<Record> {
             let flex_events = parse_flex_events(record)?;
             Ok(Record::FlexEvents(flex_events))
         }
+        Rule::COMMAND => {
+            let command = parse_command(record)?;
+            Ok(Record::Command(command))
+        }
         _ => Err(anyhow!(format!("Invalid record: {:?}", record))),
     }
 }
@@ -93,6 +98,25 @@ fn parse_flex_events(pair: Pair<Rule>) -> Result<FlexEvents> {
     Ok(FlexEvents {
         occasion: condition,
         events,
+    })
+}
+
+fn parse_command(pair: Pair<Rule>) -> Result<CommandCall> {
+    let mut pairs = pair.into_inner();
+    let command = get_next!(pairs);
+    let mut args = vec![];
+    while pairs.peek().is_some() {
+        let nxt = get_next!(pairs);
+        match nxt.as_rule() {
+            Rule::ARG => {
+                args.push(nxt.as_str().to_string());
+            }
+            _ => unreachable!("Invalid rule"),
+        }
+    }
+    Ok(CommandCall {
+        command: command.as_str().to_string(),
+        args,
     })
 }
 

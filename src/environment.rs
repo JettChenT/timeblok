@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use crate::ir::filter::{BDF, Filter};
@@ -7,7 +8,6 @@ use crate::ir::{
 };
 use crate::resolver::{resolve_date, resolve_time};
 use chrono::NaiveDate;
-use std::thread::current;
 use std::vec::IntoIter;
 use anyhow::{anyhow, Result};
 
@@ -16,7 +16,7 @@ pub struct Environment {
     pub date_time: ExactDateTime,
     pub parent: Option<Rc<Environment>>,
     pub current: DateTime,
-    pub namespace: HashMap<String, IdentData>,
+    pub namespace: RefCell<HashMap<String, IdentData>>,
 }
 
 pub struct EnvIterator<'a> {
@@ -30,24 +30,20 @@ pub struct EnvIterator<'a> {
 impl Environment {
     pub fn new(date_time: ExactDateTime, current: DateTime, parent: Option<Rc<Environment>>) -> Self {
         Environment {
-            date_time: date_time,
-            parent: parent,
-            current: current,
-            namespace: HashMap::new(),
+            date_time,
+            parent,
+            current,
+            namespace: RefCell::new(HashMap::new()),
         }
     }
     pub fn from_exact(dt: ExactDateTime) -> Self {
-        Environment {
-            current: DateTime::from_exact(&dt),
-            date_time: dt,
-            parent: None,
-            namespace: HashMap::new()
-        }
+        let cur = DateTime::from_exact(&dt);
+        Environment::new(dt, cur, None)
     }
 
-    pub fn get(&self, name: &str) -> Option<&IdentData> {
-        match self.namespace.get(name) {
-            Some(ident) => Some(ident),
+    pub fn get(&self, name: &str) -> Option<IdentData> {
+        match self.namespace.borrow().get(name) {
+            Some(ident) => Some((*ident).clone()),
             None => match &self.parent {
                 Some(parent) => parent.get(name),
                 None => None,
@@ -56,7 +52,7 @@ impl Environment {
     }
     
     pub fn set(&mut self, name: &str, ident: IdentData) -> Result<()>{
-        self.namespace.insert(name.to_string(), ident);
+        self.namespace.borrow_mut().insert(name.to_string(), ident);
         Ok(())
     }
 }

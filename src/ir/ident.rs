@@ -1,13 +1,25 @@
 use std::any::Any;
 use std::fmt::Debug;
+use std::rc::Rc;
 use crate::environment::Environment;
 use crate::ir::Date;
 use crate::ir::filter::{BDF, Filter};
 use anyhow::Result;
 
-pub struct DynFilter<T> {
-    pub filter: Box<dyn Fn(&T, Option<&Environment>) -> bool>,
+use super::command::Command;
+
+pub struct DynFilter<T>{
+    pub filter: Rc<dyn Fn(&T, Option<&Environment>) -> bool>,
     pub name: String,
+}
+
+impl<T> Clone for DynFilter<T>{
+    fn clone(&self) -> Self {
+        DynFilter{
+            filter: self.filter.clone(),
+            name: self.name.clone()
+        }
+    }
 }
 
 impl<T> Debug for DynFilter<T> {
@@ -16,13 +28,13 @@ impl<T> Debug for DynFilter<T> {
     }
 }
 
-impl<T:Debug> Filter<T> for DynFilter<T>{
+impl<T:Debug+Clone> Filter<T> for DynFilter<T>{
     fn check(&self, value: &T, env: Option<&Environment>) -> bool {
         (self.filter)(value, env)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IdentFilter {
     pub ident:Ident
 }
@@ -40,12 +52,13 @@ impl Filter<Date> for IdentFilter{
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum IdentData{
-    DateFilter (BDF<Date>)
+    DateFilter (BDF<Date>),
+    Command(Command)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Ident{
     pub name: String,
 }

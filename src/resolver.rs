@@ -78,6 +78,11 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
             Record::Note(note) => {
                 resolved.push(ExactRecord::Note(note.to_string()));
             }
+            Record::Command(cmd) => {
+                if let Err(e) = cmd.run(baseref.as_ref()){
+                    eprintln!("Error when resolving Command: {}", e);
+                }
+            }
             Record::FlexOccasion(occasion) => {
                 // Filters
                 eprintln!("{:?}", occasion);
@@ -89,7 +94,7 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                         for date in (*baseref).iter(){
                             let tmp_env = Environment::new(
                                 ExactDateTime{
-                                    date: resolve_date(&date, &(*baseref)).unwrap(),
+                                    date: resolve_date(&date, &baseref).unwrap(),
                                     time: ExactTime{
                                         hour: 0,
                                         minute: 0,
