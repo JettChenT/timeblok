@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, rc::Rc};
 
 use anyhow::{Result, anyhow};
 
@@ -6,10 +6,11 @@ use crate::environment::Environment;
 
 use super::ident::IdentData;
 
+#[derive(Clone)]
 pub struct Command{
     pub name: String,
     pub arity: usize,
-    pub func: Box<dyn Fn(&Environment, &[String]) -> Result<()>>,
+    pub func: Rc<dyn Fn(&Environment, &[String]) -> Result<()>>,
 }
 
 impl Debug for Command{

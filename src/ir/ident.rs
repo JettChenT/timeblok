@@ -52,7 +52,7 @@ impl Filter<Date> for IdentFilter{
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum IdentData{
     DateFilter (BDF<Date>),
     Command(Command)
