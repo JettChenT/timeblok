@@ -2,8 +2,9 @@ mod workalendar;
 
 use std::rc::Rc;
 
+use crate::ir::command::Command;
 use crate::ir::ident::{DynFilter, IdentData};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use chrono::{Datelike, Weekday};
 use crate::environment::Environment;
 use crate::ir::{Date, ExactDate};
@@ -17,6 +18,22 @@ impl ExactDate{
 
 fn insert_holidays(env: &mut Environment) -> Result<()>{
     todo!()
+}
+
+fn insert_commands(env: &mut Environment) -> Result<()>{
+    env.set("print", IdentData::Command(Command{
+        name: "print".to_string(),
+        arity: 1,
+        func: Rc::new(|env: &Environment, args: &[String]| {
+            if let Some(dat) = env.get(args[0].as_str()) {
+                println!("{} : {:?}", args[0], dat);
+                Ok(())
+            }else{
+                Err(anyhow!(format!("Identity {} not found", args[0])))
+            }
+        }
+        )
+    }))
 }
 
 fn insert_weekdays(env: &mut Environment) -> Result<()>{
@@ -57,5 +74,6 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
 pub fn insert_preset(env: &mut Environment) -> Result<()>{
     // inserting weekdays
     insert_weekdays(env)?;
+    insert_commands(env)?;
     Ok(())
 }
