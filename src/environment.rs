@@ -7,7 +7,6 @@ use crate::ir::{
 };
 use crate::resolver::{resolve_date, resolve_time};
 use chrono::NaiveDate;
-use std::thread::current;
 use std::vec::IntoIter;
 use anyhow::{anyhow, Result};
 
@@ -30,19 +29,15 @@ pub struct EnvIterator<'a> {
 impl Environment {
     pub fn new(date_time: ExactDateTime, current: DateTime, parent: Option<Rc<Environment>>) -> Self {
         Environment {
-            date_time: date_time,
-            parent: parent,
-            current: current,
+            date_time,
+            parent,
+            current,
             namespace: HashMap::new(),
         }
     }
     pub fn from_exact(dt: ExactDateTime) -> Self {
-        Environment {
-            current: DateTime::from_exact(&dt),
-            date_time: dt,
-            parent: None,
-            namespace: HashMap::new()
-        }
+        let cur = DateTime::from_exact(&dt);
+        Environment::new(dt, cur, None)
     }
 
     pub fn get(&self, name: &str) -> Option<&IdentData> {

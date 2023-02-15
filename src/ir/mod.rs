@@ -3,6 +3,7 @@ use crate::ir::filter::{BDF, Filter};
 
 pub mod filter;
 pub mod ident;
+pub mod command;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum NumVal {

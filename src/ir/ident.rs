@@ -5,6 +5,8 @@ use crate::ir::Date;
 use crate::ir::filter::{BDF, Filter};
 use anyhow::Result;
 
+use super::command::Command;
+
 pub struct DynFilter<T> {
     pub filter: Box<dyn Fn(&T, Option<&Environment>) -> bool>,
     pub name: String,
@@ -42,7 +44,8 @@ impl Filter<Date> for IdentFilter{
 
 #[derive(Debug)]
 pub enum IdentData{
-    DateFilter (BDF<Date>)
+    DateFilter (BDF<Date>),
+    Command(Command)
 }
 
 #[derive(Debug)]
