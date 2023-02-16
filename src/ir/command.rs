@@ -4,13 +4,13 @@ use anyhow::{Result, anyhow};
 
 use crate::environment::Environment;
 
-use super::ident::IdentData;
+use super::{ident::IdentData, Value};
 
 #[derive(Clone)]
 pub struct Command{
     pub name: String,
     pub arity: usize,
-    pub func: Rc<dyn Fn(&Environment, &[String]) -> Result<()>>,
+    pub func: Rc<dyn Fn(&Environment, &[Value]) -> Result<()>>,
 }
 
 impl Debug for Command{
@@ -20,7 +20,7 @@ impl Debug for Command{
 }
 
 impl Command{
-    pub fn run(&self, env: &Environment, args: &Vec<String>) -> Result<()>{
+    pub fn run(&self, env: &Environment, args: &Vec<Value>) -> Result<()>{
         if args.len() != self.arity {
             return Err(anyhow!("{} requires {} arguments, got {}", self.name, self.arity, args.len()));
         }
@@ -31,7 +31,7 @@ impl Command{
 #[derive(Debug)]
 pub struct CommandCall{
     pub command: String,
-    pub args: Vec<String>,
+    pub args: Vec<Value>,
 }
 
 impl CommandCall{

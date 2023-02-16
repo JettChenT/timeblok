@@ -107,12 +107,22 @@ fn parse_command(pair: Pair<Rule>) -> Result<CommandCall> {
     let mut args = vec![];
     while pairs.peek().is_some() {
         let nxt = get_next!(pairs);
-        match nxt.as_rule() {
-            Rule::ARG => {
-                args.push(nxt.as_str().to_string());
+        let res = match nxt.as_rule() {
+            Rule::FILTER => {
+                Value::NumFilter(parse_num_filter(nxt)?)
+            }
+            Rule::DATE_FILTER => {
+                Value::DateFilter(parse_date_filter(nxt)?)
+            }
+            Rule::IDENT => {
+                Value::Ident(parse_ident(nxt)?)
+            }
+            Rule::NUM_FIELD => {
+                Value::Num(parse_numval(nxt)?)
             }
             _ => unreachable!("Invalid rule"),
-        }
+        };
+        args.push(res);
     }
     Ok(CommandCall {
         command: command.as_str().to_string(),
