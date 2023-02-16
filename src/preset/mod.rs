@@ -7,7 +7,7 @@ use crate::ir::ident::{DynFilter, IdentData};
 use anyhow::{Result, anyhow};
 use chrono::{Datelike, Weekday};
 use crate::environment::Environment;
-use crate::ir::{Date, ExactDate};
+use crate::ir::{Date, ExactDate, Value};
 use crate::resolver::resolve_date;
 
 impl ExactDate{
@@ -24,19 +24,37 @@ fn insert_commands(env: &mut Environment) -> Result<()>{
     env.set("print", IdentData::Command(Command{
         name: "print".to_string(),
         arity: 1,
-        func: Rc::new(|env: &Environment, args: &[String]| {
-            if let Some(dat) = env.get(args[0].as_str()) {
-                println!("{} : {:?}", args[0], dat);
-                Ok(())
+        func: Rc::new(|env: &Environment, args: &[Value]| {
+            if let Value::Ident(ident) = &args[0] {
+                if let Some(dat) = env.get(&ident.name) {
+                    println!("{} : {:?}", &ident.name, dat);
+                    Ok(())
+                }else{
+                    Err(anyhow!(format!("Identity {} not found", &ident.name)))
+                }
             }else{
-                Err(anyhow!(format!("Identity {} not found", args[0])))
+                Err(anyhow!(format!("The argument is not an identity.")))
             }
         }
         )
-    }))
+    }))?;
+    env.set("set", IdentData::Command(Command{
+        name: "set".to_string(),
+        arity: 2,
+        func: Rc::new(|env: &Environment, args: &[Value]| {
+            if let Value::Ident(ident) = &args[0]{
+                env.set(&ident.name, IdentData::Value(args[1].clone()))?;
+                Ok(())
+            }else{
+                Err(anyhow!("First argument for /set must be an identity."))
+            }
+        }) 
+    }))?;
+    Ok(())
 }
 
 fn insert_weekdays(env: &mut Environment) -> Result<()>{
+    use Value::DateFilter;
     let weekdays = vec![
         "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
         "mon", "tue", "wed", "thu", "fri", "sat", "sun",
@@ -49,7 +67,7 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
             }),
             name: w.to_string(),
         };
-        env.set(w, IdentData::DateFilter(Box::new(filt)))?;
+        env.set(w, IdentData::Value(DateFilter(Box::new(filt))))?;
     }
     // Insert workday and weekend
     let workday = DynFilter {
@@ -59,7 +77,7 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
         }),
         name: "workday".to_string(),
     };
-    env.set("workday", IdentData::DateFilter(Box::new(workday)))?;
+    env.set("workday", IdentData::Value(DateFilter(Box::new(workday))))?;
     let weekend = DynFilter {
         filter: Rc::new(move |d:&Date, env:Option<&Environment>| {
             let wkday = resolve_date(d, env.unwrap()).unwrap().weekday().unwrap();
@@ -67,7 +85,7 @@ fn insert_weekdays(env: &mut Environment) -> Result<()>{
         }),
         name: "weekend".to_string(),
     };
-    env.set("weekend", IdentData::DateFilter(Box::new(weekend)))?;
+    env.set("weekend", IdentData::Value(DateFilter(Box::new(weekend))))?;
     Ok(())
 }
 

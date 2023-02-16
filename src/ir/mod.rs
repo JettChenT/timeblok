@@ -1,7 +1,7 @@
 use chrono::{Datelike, NaiveDate};
 use crate::ir::filter::{BDF, Filter};
 
-use self::command::CommandCall;
+use self::{command::CommandCall, ident::Ident};
 
 pub mod filter;
 pub mod ident;
@@ -165,6 +165,15 @@ pub enum FlexOccasion {
 pub struct FlexEvents {
     pub occasion: FlexOccasion,
     pub events: Vec<Event>,
+}
+
+#[derive(Debug, Clone)]
+pub enum Value {
+    Num(NumVal),
+    DateFilter(BDF<Date>),
+    NumFilter(BDF<NumVal>),
+    Date(Date),
+    Ident(Ident)
 }
 
 impl DateTime {

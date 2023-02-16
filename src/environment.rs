@@ -51,7 +51,7 @@ impl Environment {
         }
     }
     
-    pub fn set(&mut self, name: &str, ident: IdentData) -> Result<()>{
+    pub fn set(&self, name: &str, ident: IdentData) -> Result<()>{
         self.namespace.borrow_mut().insert(name.to_string(), ident);
         Ok(())
     }

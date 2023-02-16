@@ -6,6 +6,7 @@ use crate::ir::Date;
 use crate::ir::filter::{BDF, Filter};
 use anyhow::Result;
 
+use super::Value;
 use super::command::Command;
 
 pub struct DynFilter<T>{
@@ -42,7 +43,7 @@ pub struct IdentFilter {
 impl Filter<Date> for IdentFilter{
     fn check(&self, value: &Date, env: Option<&Environment>) -> bool {
         match env.unwrap().get(&self.ident.name) {
-            Some(IdentData::DateFilter(filt)) => filt.check(value, env),
+            Some(IdentData::Value(Value::DateFilter(filt))) => filt.check(value, env),
             _ => {
                 eprintln!("Warning: {} is not a date filter, returning false", self.ident.name);
                 false
@@ -54,7 +55,7 @@ impl Filter<Date> for IdentFilter{
 
 #[derive(Debug, Clone)]
 pub enum IdentData{
-    DateFilter (BDF<Date>),
+    Value (Value),
     Command(Command)
 }
 
