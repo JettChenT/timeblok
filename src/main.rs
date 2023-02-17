@@ -19,6 +19,7 @@ mod output;
 mod parser;
 mod resolver;
 mod preset;
+mod importer;
 
 use converter::to_ical;
 use parser::BlokParser;

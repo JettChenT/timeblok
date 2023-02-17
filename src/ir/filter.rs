@@ -52,6 +52,12 @@ pub struct ExcludeFilt<T> {
     pub target: BDF<T>,
 }
 
+impl<T: Debug+Clone> ExcludeFilt<T> {
+    pub fn new(target: BDF<T>) -> Self {
+        ExcludeFilt { target }
+    }
+}
+
 impl<T: Debug+Clone> Filter<T> for ExcludeFilt<T> {
     fn check(&self, value: &T, env: Option<&Environment>) -> bool {
         !self.target.check(value, env)

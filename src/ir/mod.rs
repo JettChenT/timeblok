@@ -1,4 +1,5 @@
 use chrono::{Datelike, NaiveDate};
+use icalendar::{DatePerhapsTime, CalendarDateTime};
 use crate::ir::filter::{BDF, Filter};
 
 use self::{command::CommandCall, ident::Ident};
@@ -7,7 +8,7 @@ pub mod filter;
 pub mod ident;
 pub mod command;
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum NumVal {
     Number(i64),
     Unsure,
@@ -89,14 +90,14 @@ pub struct FlexDate {
     pub day: BDF<NumVal>,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Date {
     pub year: NumVal,
     pub month: NumVal,
     pub day: NumVal,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct ExactDate {
     pub year: i32,
     pub month: u32,
@@ -238,6 +239,33 @@ impl ExactDateTime{
             },
             tz: TimeZoneChoice::Local,
         }
+    }
+}
+
+impl ExactDate{
+    pub fn from_naive(naive: NaiveDate) -> Self {
+        Self { year: naive.year(), month: naive.month(), day: naive.day() }
+    }
+
+    pub fn to_naive(&self) -> NaiveDate {
+        NaiveDate::from_ymd_opt(self.year, self.month, self.day).unwrap()
+    }
+
+    pub fn from_date_perhaps_time(d: DatePerhapsTime) -> Self {
+        match d{
+            DatePerhapsTime::Date(d) => Self::from_naive(d),
+            DatePerhapsTime::DateTime(dt) => {
+                match dt {
+                    CalendarDateTime::Floating(f) => Self::from_naive(f.date()),
+                    CalendarDateTime::Utc(x) => Self::from_naive(x.date_naive()),
+                    CalendarDateTime::WithTimezone { date_time, tzid } => Self::from_naive(date_time.date())
+                }
+            },
+        }
+    }
+
+    pub fn from_ymd(year: i32, month: u32, day: u32) -> Self {
+        Self {year, month, day}
     }
 }
 
