@@ -34,8 +34,9 @@ When compiled into an .ics file, this could be imported into your calendar.
 
 ### Monthly planning
 ```
+/region CN                                        // Sets the region to China
 2023-1-                                           // Locks in the following events to 2023-1
-{--1~--10 and workday}                            // workdays from jan 1 to jan 10
+{--1~--10 and CNworkday}                          // workdays from jan 1 to jan 10 in China
 7:30am wake up to a new day
 10am ~ 11am work on EvilCorp
 
@@ -88,11 +89,12 @@ $ timeblok --help
 ```
 
 ## Specs 
-The TimeBlock language currently recognizes three types of statements(by order of precedence):
+The TimeBlock language the following statements:
 - Event
 - Occasion
 - Notes
 - Filters
+- Commands
 
 `Occasion` is any single line that describes a point in time, usually dates in `YYYY-MM-DD` format.
 It can be a date, a time, or a date and time.
@@ -106,6 +108,8 @@ A `Note` just a line of text, if it occurs after an Event, it is considered a no
 `DESCRIPTION` field of an ics entry.
 
 A `Range` is simply a pair of Occasions, separated by a `~`, indicating, well, a time-range.
+
+A `Command` is a line of text that starts with a `/` and is followed by a command name and arguments, allowing for an extra level of extensibility.
 
 #### Filters
 `Filters` are a special type of statement that can be used to filter out dates, events, numbers in a specified range.
@@ -133,3 +137,13 @@ The following filters are currently supported:
 
 More filters are planned to be added in the future. (My current priority is to support region specific resolving of workdays based on [workalendar](https://github.com/workalendar/workalendar))
 
+#### Commands (Experimental)
+Format: `/command_name [arg1] [arg2] ...`
+
+Currently, commands are statements that can make changes to the scope, or namespace, of the program, or perform arbitrary operations.
+In the future, commands will also support creations of `OCCASIONS` and `EVENTS`, as well as a plugin system.
+
+Currently available commands include:
+- `/region [region_name]`: sets the region for resolving workdays based on the amazing [workalendar](https://github.com/workalendar/workalendar) project. For a reference of the names of all supported regions, see [here](https://github.com/JettChenT/workalendar-hub/tree/main/workingdays). Note: currently only [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) and [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) codes(eg. CN, US) are supported, but we will support more flexible region names in the future.
+- `/set [key] [value]`: sets a name in the namespace to a value. This is useful for for creating custom filters. eg. `/set semester {-2-17~-6-30}`
+- `/print [key]`: prints the value of a name in the namespace. 
