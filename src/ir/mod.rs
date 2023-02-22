@@ -1,12 +1,12 @@
+use crate::ir::filter::{Filter, BDF};
 use chrono::{Datelike, NaiveDate};
-use icalendar::{DatePerhapsTime, CalendarDateTime};
-use crate::ir::filter::{BDF, Filter};
+use icalendar::{CalendarDateTime, DatePerhapsTime};
 
 use self::{command::CommandCall, ident::Ident};
 
+pub mod command;
 pub mod filter;
 pub mod ident;
-pub mod command;
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum NumVal {
@@ -22,7 +22,7 @@ pub struct NumRange {
 
 #[derive(Debug, Clone)]
 pub enum Range {
-    TimeRange(TimeRange),
+    Time(TimeRange),
     Duration(Duration),
     AllDay(Date),
 }
@@ -148,7 +148,7 @@ pub enum Record {
     Note(String),
     FlexOccasion(FlexOccasion),
     FlexEvents(FlexEvents),
-    Command(CommandCall)
+    Command(CommandCall),
 }
 
 #[derive(Debug)]
@@ -174,7 +174,7 @@ pub enum Value {
     DateFilter(BDF<Date>),
     NumFilter(BDF<NumVal>),
     Date(Date),
-    Ident(Ident)
+    Ident(Ident),
 }
 
 impl DateTime {
@@ -195,7 +195,14 @@ impl DateTime {
         }
     }
 
-    pub fn from_ymd_hms(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> Self {
+    pub fn from_ymd_hms(
+        year: i32,
+        month: u32,
+        day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+    ) -> Self {
         DateTime {
             date: Some(Date {
                 year: NumVal::Number(year as i64),
@@ -224,14 +231,17 @@ impl DateTime {
     }
 }
 
-impl ExactDateTime{
-    pub fn from_ymd_hms(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> Self {
+impl ExactDateTime {
+    pub fn from_ymd_hms(
+        year: i32,
+        month: u32,
+        day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+    ) -> Self {
         ExactDateTime {
-            date: ExactDate {
-                year,
-                month,
-                day,
-            },
+            date: ExactDate { year, month, day },
             time: ExactTime {
                 hour,
                 minute,
@@ -242,30 +252,34 @@ impl ExactDateTime{
     }
 }
 
-impl ExactDate{
+impl ExactDate {
     pub fn from_naive(naive: NaiveDate) -> Self {
-        Self { year: naive.year(), month: naive.month(), day: naive.day() }
+        Self {
+            year: naive.year(),
+            month: naive.month(),
+            day: naive.day(),
+        }
     }
 
-    pub fn to_naive(&self) -> NaiveDate {
+    pub fn to_naive(self) -> NaiveDate {
         NaiveDate::from_ymd_opt(self.year, self.month, self.day).unwrap()
     }
 
     pub fn from_date_perhaps_time(d: DatePerhapsTime) -> Self {
-        match d{
+        match d {
             DatePerhapsTime::Date(d) => Self::from_naive(d),
-            DatePerhapsTime::DateTime(dt) => {
-                match dt {
-                    CalendarDateTime::Floating(f) => Self::from_naive(f.date()),
-                    CalendarDateTime::Utc(x) => Self::from_naive(x.date_naive()),
-                    CalendarDateTime::WithTimezone { date_time, tzid } => Self::from_naive(date_time.date())
+            DatePerhapsTime::DateTime(dt) => match dt {
+                CalendarDateTime::Floating(f) => Self::from_naive(f.date()),
+                CalendarDateTime::Utc(x) => Self::from_naive(x.date_naive()),
+                CalendarDateTime::WithTimezone { date_time, tzid: _ } => {
+                    Self::from_naive(date_time.date())
                 }
             },
         }
     }
 
     pub fn from_ymd(year: i32, month: u32, day: u32) -> Self {
-        Self {year, month, day}
+        Self { year, month, day }
     }
 }
 
@@ -288,10 +302,12 @@ impl Date {
         }
     }
 
-    pub fn to_naive(&self) -> Option<NaiveDate> {
+    pub fn to_naive(self) -> Option<NaiveDate> {
         use NumVal::*;
         match (self.year, self.month, self.day) {
-            (Number(y), Number(m), Number(d)) => Some(NaiveDate::from_ymd_opt(y as i32, m as u32, d as u32)?),
+            (Number(y), Number(m), Number(d)) => {
+                Some(NaiveDate::from_ymd_opt(y as i32, m as u32, d as u32)?)
+            }
             _ => None,
         }
     }
@@ -306,6 +322,12 @@ impl Date {
     }
 }
 
+impl Default for Date {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Time {
     pub fn new() -> Self {
         Time {
@@ -314,5 +336,11 @@ impl Time {
             second: NumVal::Unsure,
             tod: None,
         }
+    }
+}
+
+impl Default for Time {
+    fn default() -> Self {
+        Self::new()
     }
 }

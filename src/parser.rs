@@ -5,6 +5,7 @@ use crate::ir::filter;
 use crate::ir::filter::BinFilt;
 use crate::ir::filter::ExcludeFilt;
 use crate::ir::filter::BDF;
+use crate::ir::ident::{Ident, IdentFilter};
 use crate::ir::Range::AllDay;
 use crate::ir::*;
 use anyhow::anyhow;
@@ -13,7 +14,6 @@ use lazy_static::lazy_static;
 use pest::iterators::{Pair, Pairs};
 use pest::pratt_parser::PrattParser;
 use pest_derive::Parser;
-use crate::ir::ident::{Ident, IdentFilter};
 
 #[derive(Parser)]
 #[grammar = "blok.pest"]
@@ -23,9 +23,7 @@ macro_rules! get_next {
     ($pairs:ident) => {
         match $pairs.next() {
             Some(pair) => pair,
-            None => {
-                return Err(anyhow!("Expected Token"))
-            },
+            None => return Err(anyhow!("Expected Token")),
         }
     };
 }
@@ -108,18 +106,10 @@ fn parse_command(pair: Pair<Rule>) -> Result<CommandCall> {
     while pairs.peek().is_some() {
         let nxt = get_next!(pairs);
         let res = match nxt.as_rule() {
-            Rule::FILTER => {
-                Value::NumFilter(parse_num_filter(nxt)?)
-            }
-            Rule::DATE_FILTER => {
-                Value::DateFilter(parse_date_filter(nxt)?)
-            }
-            Rule::IDENT => {
-                Value::Ident(parse_ident(nxt)?)
-            }
-            Rule::NUM_FIELD => {
-                Value::Num(parse_numval(nxt)?)
-            }
+            Rule::FILTER => Value::NumFilter(parse_num_filter(nxt)?),
+            Rule::DATE_FILTER => Value::DateFilter(parse_date_filter(nxt)?),
+            Rule::IDENT => Value::Ident(parse_ident(nxt)?),
+            Rule::NUM_FIELD => Value::Num(parse_numval(nxt)?),
             _ => unreachable!("Invalid rule"),
         };
         args.push(res);
@@ -251,7 +241,7 @@ fn parse_timerange(pair: Pair<Rule>) -> Result<Range> {
             let mut pairs = pair.into_inner();
             let start = get_match!(parse_occasion, pairs)?;
             let end = get_match!(parse_occasion, pairs)?;
-            Ok(Range::TimeRange(TimeRange { start, end }))
+            Ok(Range::Time(TimeRange { start, end }))
         }
         Rule::OCCASION => {
             let occasion = parse_occasion(pair)?;
@@ -284,7 +274,7 @@ fn parse_numrange(pair: Pair<Rule>) -> Result<NumRange> {
     Ok(NumRange { start, end })
 }
 
-fn parse_flex_date(pair: Pair<Rule>) -> Result<FlexDate>{
+fn parse_flex_date(pair: Pair<Rule>) -> Result<FlexDate> {
     let mut pairs = pair.into_inner();
     let year = get_match!(parse_num_filter, pairs)?;
     let month = get_match!(parse_num_filter, pairs)?;
@@ -294,12 +284,12 @@ fn parse_flex_date(pair: Pair<Rule>) -> Result<FlexDate>{
 
 fn parse_ident(pair: Pair<Rule>) -> Result<Ident> {
     let name = pair.as_str().to_string();
-    Ok(Ident { name})
+    Ok(Ident { name })
 }
 
 fn parse_ident_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
     let ident = parse_ident(pair)?;
-    Ok(Box::new(IdentFilter{ident}))
+    Ok(Box::new(IdentFilter { ident }))
 }
 
 lazy_static! {
@@ -323,15 +313,15 @@ pub fn parse_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
             Rule::RANGE => {
                 let trange = parse_timerange(primary)?;
                 Ok(Box::new(trange) as BDF<Date>)
-            },
+            }
             Rule::FLEX_DATE => {
                 let date = parse_flex_date(primary)?;
                 Ok(Box::new(date) as BDF<Date>)
-            },
+            }
             _ => {
                 eprintln!("Invalid date filter: {:?}", primary);
                 todo!()
-            },
+            }
         })
         .map_infix(|lhs, op, rhs| {
             let lhs = lhs?;
@@ -345,7 +335,7 @@ pub fn parse_date_filter(pair: Pair<Rule>) -> Result<BDF<Date>> {
                 Rule::AND => Ok(Box::new(BinFilt {
                     lhs,
                     rhs,
-                    op: filter::Op::AND,
+                    op: filter::Op::And,
                 })),
                 _ => unreachable!("Invalid infix rule"),
             }
@@ -365,20 +355,18 @@ pub fn parse_num_filter(pair: Pair<Rule>) -> Result<BDF<NumVal>> {
     PRATT_PARSER
         .map_primary(|primary| match primary.as_rule() {
             Rule::NUM_RANGE => {
-              let num_range = parse_numrange(primary)?;
+                let num_range = parse_numrange(primary)?;
                 Ok(Box::new(num_range) as BDF<NumVal>)
-            },
+            }
             Rule::NUM_FIELD => {
                 let num = parse_numval(primary)?;
                 Ok(Box::new(num) as BDF<NumVal>)
-            },
-            Rule::UNSURE => {
-                Ok(Box::new(NumVal::Unsure) as BDF<NumVal>)
-            },
+            }
+            Rule::UNSURE => Ok(Box::new(NumVal::Unsure) as BDF<NumVal>),
             _ => {
                 eprintln!("Invalid number filter: {:?}", primary);
                 todo!()
-            },
+            }
         })
         .map_infix(|lhs, op, rhs| {
             let lhs = lhs?;
@@ -392,7 +380,7 @@ pub fn parse_num_filter(pair: Pair<Rule>) -> Result<BDF<NumVal>> {
                 Rule::AND => Ok(Box::new(BinFilt {
                     lhs,
                     rhs,
-                    op: filter::Op::AND,
+                    op: filter::Op::And,
                 })),
                 _ => unreachable!("Invalid infix rule"),
             }

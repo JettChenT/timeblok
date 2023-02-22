@@ -7,7 +7,7 @@ use crate::ir::NumVal::{Number, Unsure};
 use crate::ir::*;
 use crate::resolver::{resolve_date, resolve_range};
 
-pub trait Filter<T>: Debug+DynClone {
+pub trait Filter<T>: Debug + DynClone {
     fn check(&self, value: &T, env: Option<&Environment>) -> bool;
     fn filter(&self, values: Vec<T>, env: Option<&Environment>) -> Vec<T> {
         // PERFORMANCE: Change this to parallel execution, use references and lifetimes to improve memory efficiency
@@ -26,39 +26,39 @@ dyn_clone::clone_trait_object!(<T> Filter<T>);
 #[derive(Debug, Clone)]
 pub enum Op {
     OR,
-    AND,
+    And,
 }
 
 pub type BDF<T> = Box<dyn Filter<T>>;
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct BinFilt<T: Debug> {
     pub lhs: BDF<T>,
     pub rhs: BDF<T>,
     pub op: Op,
 }
 
-impl<T: Debug+Clone> Filter<T> for BinFilt<T> {
+impl<T: Debug + Clone> Filter<T> for BinFilt<T> {
     fn check(&self, value: &T, env: Option<&Environment>) -> bool {
         match self.op {
             Op::OR => self.lhs.check(value, env) || self.rhs.check(value, env),
-            Op::AND => self.lhs.check(value, env) && self.rhs.check(value, env),
+            Op::And => self.lhs.check(value, env) && self.rhs.check(value, env),
         }
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct ExcludeFilt<T> {
     pub target: BDF<T>,
 }
 
-impl<T: Debug+Clone> ExcludeFilt<T> {
+impl<T: Debug + Clone> ExcludeFilt<T> {
     pub fn new(target: BDF<T>) -> Self {
         ExcludeFilt { target }
     }
 }
 
-impl<T: Debug+Clone> Filter<T> for ExcludeFilt<T> {
+impl<T: Debug + Clone> Filter<T> for ExcludeFilt<T> {
     fn check(&self, value: &T, env: Option<&Environment>) -> bool {
         !self.target.check(value, env)
     }
@@ -141,9 +141,9 @@ impl Filter<Date> for FlexDate {
 // Add a unit test for filters
 // Thank you copilot
 mod tests {
+    use super::*;
     use crate::ir::Range;
     use crate::ir::TimeRange;
-    use super::*;
     #[test]
     fn test_flex_date() {
         let fd = FlexDate {
@@ -192,13 +192,13 @@ mod tests {
     }
 
     #[test]
-    fn test_time_range(){
-        let trange = TimeRange{
+    fn test_time_range() {
+        let trange = TimeRange {
             start: DateTime::from_ymd(2020, 1, 3),
-            end: DateTime::from_ymd(2020, 2, 1)
+            end: DateTime::from_ymd(2020, 2, 1),
         };
         eprintln!("{:?}", trange);
-        let range = Range::TimeRange(trange);
+        let range = Range::Time(trange);
         let env = Environment::from_exact(ExactDateTime::from_ymd_hms(2020, 1, 1, 1, 1, 1));
         assert!(range.check(&Date::from_ymd(2020, 1, 3), Some(&env)));
         assert!(!range.check(&Date::from_ymd(2020, 1, 2), Some(&env)));

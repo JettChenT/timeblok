@@ -4,7 +4,7 @@ extern crate pest_derive;
 extern crate core;
 
 use crate::parser::{parse_file, Rule};
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use directories::{BaseDirs, ProjectDirs};
 use edit::edit_file;
 use pest::Parser;
@@ -14,12 +14,12 @@ use std::io::Write;
 mod args;
 mod converter;
 mod environment;
+mod importer;
 mod ir;
 mod output;
 mod parser;
-mod resolver;
 mod preset;
-mod importer;
+mod resolver;
 
 use converter::to_ical;
 use parser::BlokParser;
@@ -35,7 +35,7 @@ fn main() {
     }
 }
 
-fn handle_infile(infile: Option<String>, new:bool) -> Result<String>{
+fn handle_infile(infile: Option<String>, new: bool) -> Result<String> {
     match infile {
         Some(s) => Ok(s),
         None => match new {
@@ -43,7 +43,7 @@ fn handle_infile(infile: Option<String>, new:bool) -> Result<String>{
                 let cur_date = chrono::Local::now().format("%Y-%m-%d").to_string();
                 let template = format!("{}\n", cur_date);
                 let edited = edit::edit(template)?;
-                if let Some(dir) = ProjectDirs::from("", "", "timeblok"){
+                if let Some(dir) = ProjectDirs::from("", "", "timeblok") {
                     let data_dir = dir.data_dir().join("bloks");
                     fs::create_dir_all(&data_dir)?;
                     let filename = format!("{}.blok", cur_date);
@@ -55,7 +55,7 @@ fn handle_infile(infile: Option<String>, new:bool) -> Result<String>{
                 } else {
                     Err(anyhow!("Could not get data directory"))
                 }
-            },
+            }
             false => Err(anyhow!("No input file specified")),
         },
     }
@@ -89,7 +89,9 @@ fn try_main(args: args::Args) -> Result<()> {
             }
         }
         _ => {
-            if args.print{println!("{}", converted);}
+            if args.print {
+                println!("{}", converted);
+            }
             if args.open {
                 // Save file in temporary directory and open it
                 let base_dirs = BaseDirs::new().expect("Could not get base directories");

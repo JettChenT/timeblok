@@ -1,15 +1,16 @@
+use crate::ir::filter::{Filter, BDF};
+use crate::ir::NumVal::Number;
+use crate::ir::{
+    ident::IdentData, Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal, Time,
+    TimeZoneChoice,
+};
+use crate::resolver::{resolve_date, resolve_time};
+use anyhow::{anyhow, Result};
+use chrono::NaiveDate;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use crate::ir::filter::{BDF, Filter};
-use crate::ir::NumVal::Number;
-use crate::ir::{
-    Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal, Time, TimeZoneChoice, ident::IdentData
-};
-use crate::resolver::{resolve_date, resolve_time};
-use chrono::NaiveDate;
 use std::vec::IntoIter;
-use anyhow::{anyhow, Result};
 
 #[derive(Debug)]
 pub struct Environment {
@@ -28,7 +29,11 @@ pub struct EnvIterator<'a> {
 }
 
 impl Environment {
-    pub fn new(date_time: ExactDateTime, current: DateTime, parent: Option<Rc<Environment>>) -> Self {
+    pub fn new(
+        date_time: ExactDateTime,
+        current: DateTime,
+        parent: Option<Rc<Environment>>,
+    ) -> Self {
         Environment {
             date_time,
             parent,
@@ -47,12 +52,17 @@ impl Environment {
             None => match &self.parent {
                 Some(parent) => parent.get(name),
                 None => None,
-            }
+            },
         }
     }
-    
-    pub fn set(&self, name: &str, ident: IdentData) -> Result<()>{
+
+    pub fn set(&self, name: &str, ident: IdentData) -> Result<()> {
         self.namespace.borrow_mut().insert(name.to_string(), ident);
+        Ok(())
+    }
+
+    pub fn del(&self, name: &str) -> Result<()> {
+        self.namespace.borrow_mut().remove(name);
         Ok(())
     }
 }
@@ -112,7 +122,10 @@ impl Iterator for EnvIterator<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         // This conveniently assumes dates are continuous, don't use for non-continuous filters
         let cur_date = Date::from_naive(self.cur_date);
-        if !self.filter.check(&(resolve_date(&cur_date, &self.env).ok())?, Some(&self.env)) {
+        if !self
+            .filter
+            .check(&(resolve_date(&cur_date, &self.env).ok())?, Some(&self.env))
+        {
             return None;
         }
         let new_date = self.cur_date + chrono::Duration::days(1);
@@ -121,23 +134,24 @@ impl Iterator for EnvIterator<'_> {
     }
 }
 
-impl Environment{
+impl Environment {
     pub fn iter(&self) -> EnvIterator {
         let fit_date = max_fit_date(&self).unwrap();
         let filter = Box::new(FlexDate {
             day: Box::new(FlexField::NumVal(fit_date.day)) as BDF<NumVal>,
             month: Box::new(FlexField::NumVal(fit_date.month)) as BDF<NumVal>,
-            year: Box::new( FlexField::NumVal(fit_date.year)) as BDF<NumVal>,
+            year: Box::new(FlexField::NumVal(fit_date.year)) as BDF<NumVal>,
         });
-        let filldat = |n:NumVal| match n {
+        let filldat = |n: NumVal| match n {
             Number(n) => n,
-            _ => 1
+            _ => 1,
         };
         let cur_date = NaiveDate::from_ymd_opt(
             filldat(fit_date.year) as i32,
             filldat(fit_date.month) as u32,
             filldat(fit_date.day) as u32,
-        ).unwrap();
+        )
+        .unwrap();
         EnvIterator {
             env: self,
             cur: fit_date,
@@ -148,22 +162,25 @@ impl Environment{
     }
 }
 
-mod tests{
+mod tests {
+    use super::*;
     use crate::ir::ExactTime;
     use crate::ir::NumVal::Unsure;
-    use super::*;
     #[test]
-    fn test_env(){
+    fn test_env() {
         use super::*;
         let env = Environment::from_exact(ExactDateTime::from_ymd_hms(2023, 1, 1, 1, 1, 1));
-        let mut daynum= 1;
-        for date in env.iter(){
-            assert_eq!(date, Date{
-                year: Number(2023),
-                month: Number(1),
-                day: Number(daynum),
-            });
-            daynum+=1;
+        let mut daynum = 1;
+        for date in env.iter() {
+            assert_eq!(
+                date,
+                Date {
+                    year: Number(2023),
+                    month: Number(1),
+                    day: Number(daynum),
+                }
+            );
+            daynum += 1;
         }
     }
 }

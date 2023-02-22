@@ -1,12 +1,12 @@
-use std::rc::Rc;
 use crate::environment::Environment;
 use crate::ir::NumVal::{Number, Unsure};
 use crate::ir::*;
+use crate::preset::insert_preset;
 use anyhow::{anyhow, Result};
 use chrono::Local;
 use chrono::{prelude as cr, Datelike, Timelike};
+use std::rc::Rc;
 use std::time::SystemTime;
-use crate::preset::insert_preset;
 
 // TODO: Change all resolve to Result<> based
 
@@ -34,18 +34,19 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
     let mut base = {
         let tyear = base_t.date.year;
         Environment::new(
-        base_t,
-        DateTime {
-            date: Some(Date {
-                year: Number(tyear as i64),
-                month: Unsure,
-                day: Unsure,
-            }),
-            time: None,
-            tz: None,
-        },
-        None,
-    )};
+            base_t,
+            DateTime {
+                date: Some(Date {
+                    year: Number(tyear as i64),
+                    month: Unsure,
+                    day: Unsure,
+                }),
+                time: None,
+                tz: None,
+            },
+            None,
+        )
+    };
 
     insert_preset(&mut base).unwrap();
 
@@ -65,11 +66,7 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 // PERFORMANCE: update base inplace
                 match fixed_occasion {
                     Ok(o) => {
-                        base = Environment::new(
-                            o,
-                            occasion,
-                            Some(Rc::clone(&baseref)),
-                        );
+                        base = Environment::new(o, occasion, Some(Rc::clone(&baseref)));
                         baseref = Rc::new(base);
                     }
                     Err(e) => eprintln!("Error resolving occasion: {}", e),
@@ -79,7 +76,7 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 resolved.push(ExactRecord::Note(note.to_string()));
             }
             Record::Command(cmd) => {
-                if let Err(e) = cmd.run(baseref.as_ref()){
+                if let Err(e) = cmd.run(baseref.as_ref()) {
                     eprintln!("Error when resolving Command: {}", e);
                 }
             }
@@ -88,37 +85,36 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 eprintln!("{:?}", occasion);
                 todo!()
             }
-            Record::FlexEvents(flex_events) => {
-                match &flex_events.occasion{
-                    FlexOccasion::Filter(filter) => {
-                        for date in (*baseref).iter(){
-                            let tmp_env = Environment::new(
-                                ExactDateTime{
-                                    date: resolve_date(&date, &baseref).unwrap(),
-                                    time: ExactTime{
-                                        hour: 0,
-                                        minute: 0,
-                                        second: 0,
-                                    },
-                                    tz: TimeZoneChoice::Local,
-                                },DateTime{
-                                    date: Some(date),
-                                    time: None,
-                                    tz: None,
+            Record::FlexEvents(flex_events) => match &flex_events.occasion {
+                FlexOccasion::Filter(filter) => {
+                    for date in (*baseref).iter() {
+                        let tmp_env = Environment::new(
+                            ExactDateTime {
+                                date: resolve_date(&date, &baseref).unwrap(),
+                                time: ExactTime {
+                                    hour: 0,
+                                    minute: 0,
+                                    second: 0,
                                 },
-                                Some(Rc::clone(&baseref)),
-                            );
-                            if filter.check(&date, Some(&(*baseref))){
-                                for event in &flex_events.events{
-                                    if let Ok(res) = resolve_event(event, &tmp_env){
-                                        resolved.push(ExactRecord::Event(res));
-                                    }
+                                tz: TimeZoneChoice::Local,
+                            },
+                            DateTime {
+                                date: Some(date),
+                                time: None,
+                                tz: None,
+                            },
+                            Some(Rc::clone(&baseref)),
+                        );
+                        if filter.check(&date, Some(&(*baseref))) {
+                            for event in &flex_events.events {
+                                if let Ok(res) = resolve_event(event, &tmp_env) {
+                                    resolved.push(ExactRecord::Event(res));
                                 }
                             }
                         }
                     }
                 }
-            }
+            },
         }
     }
     resolved
@@ -230,7 +226,7 @@ pub fn resolve_range(range: &Range, base: &Environment) -> Result<ExactRange> {
             let date = resolve_date(date, &base)?;
             ExactRange::AllDay(date)
         }
-        Range::TimeRange(time_range) => {
+        Range::Time(time_range) => {
             let start = resolve_occasion(&time_range.start, base)?;
             let end = resolve_occasion(&time_range.end, base)?;
             ExactRange::TimeRange(ExactTimeRange { start, end })
