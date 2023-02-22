@@ -6,7 +6,7 @@ extern crate core;
 use crate::parser::{parse_file, Rule};
 use anyhow::{anyhow, Result};
 use directories::{BaseDirs, ProjectDirs};
-use edit::edit_file;
+
 use pest::Parser;
 use std::fs;
 use std::io::Write;

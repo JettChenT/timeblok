@@ -2,7 +2,7 @@ mod workalendar;
 
 use std::rc::Rc;
 
-use crate::environment::{self, Environment};
+use crate::environment::{Environment};
 use crate::importer::SetFilter;
 use crate::ir::command::Command;
 use crate::ir::filter::ExcludeFilt;

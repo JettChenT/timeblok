@@ -1,16 +1,15 @@
 use crate::ir::filter::{Filter, BDF};
 use crate::ir::NumVal::Number;
 use crate::ir::{
-    ident::IdentData, Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal, Time,
-    TimeZoneChoice,
+    ident::IdentData, Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal,
 };
-use crate::resolver::{resolve_date, resolve_time};
-use anyhow::{anyhow, Result};
+use crate::resolver::{resolve_date};
+use anyhow::{Result};
 use chrono::NaiveDate;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::vec::IntoIter;
+
 
 #[derive(Debug)]
 pub struct Environment {
@@ -124,7 +123,7 @@ impl Iterator for EnvIterator<'_> {
         let cur_date = Date::from_naive(self.cur_date);
         if !self
             .filter
-            .check(&(resolve_date(&cur_date, &self.env).ok())?, Some(&self.env))
+            .check(&(resolve_date(&cur_date, self.env).ok())?, Some(self.env))
         {
             return None;
         }
@@ -136,7 +135,7 @@ impl Iterator for EnvIterator<'_> {
 
 impl Environment {
     pub fn iter(&self) -> EnvIterator {
-        let fit_date = max_fit_date(&self).unwrap();
+        let fit_date = max_fit_date(self).unwrap();
         let filter = Box::new(FlexDate {
             day: Box::new(FlexField::NumVal(fit_date.day)) as BDF<NumVal>,
             month: Box::new(FlexField::NumVal(fit_date.month)) as BDF<NumVal>,
@@ -163,9 +162,9 @@ impl Environment {
 }
 
 mod tests {
-    use super::*;
-    use crate::ir::ExactTime;
-    use crate::ir::NumVal::Unsure;
+    
+    
+    
     #[test]
     fn test_env() {
         use super::*;

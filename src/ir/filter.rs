@@ -65,7 +65,7 @@ impl<T: Debug + Clone> Filter<T> for ExcludeFilt<T> {
 }
 
 impl Filter<NumVal> for NumRange {
-    fn check(&self, value: &NumVal, env: Option<&Environment>) -> bool {
+    fn check(&self, value: &NumVal, _env: Option<&Environment>) -> bool {
         match *value {
             Number(target) => match (&self.start, &self.end) {
                 (Unsure, Unsure) => true,
@@ -79,7 +79,7 @@ impl Filter<NumVal> for NumRange {
 }
 
 impl Filter<NumVal> for NumVal {
-    fn check(&self, value: &NumVal, env: Option<&Environment>) -> bool {
+    fn check(&self, value: &NumVal, _env: Option<&Environment>) -> bool {
         if matches!(self, Unsure) {
             true
         } else {
@@ -89,7 +89,7 @@ impl Filter<NumVal> for NumVal {
 }
 
 impl Filter<ExactDate> for ExactRange {
-    fn check(&self, value: &ExactDate, env: Option<&Environment>) -> bool {
+    fn check(&self, value: &ExactDate, _env: Option<&Environment>) -> bool {
         match self {
             ExactRange::TimeRange(tr) => {
                 // unwrap or return false
@@ -230,7 +230,7 @@ mod tests {
                 start: Number(3),
                 end: Unsure,
             }),
-            op: Op::AND,
+            op: Op::And,
         };
         assert!(!andfilt.check(&Number(1), None));
         assert!(andfilt.check(&Number(8), None));

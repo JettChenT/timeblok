@@ -3,12 +3,12 @@ use chrono::NaiveDate;
 use directories::ProjectDirs;
 use icalendar::Calendar;
 use std::fs::create_dir_all;
-use std::io::copy;
-use std::path::{Path, PathBuf};
+
+use std::path::{PathBuf};
 use std::str::FromStr;
 use std::{fs, fs::File, io::Read};
 
-use indicatif::{ProgressBar, ProgressStyle};
+
 use reqwest::Url;
 
 fn get_dir() -> Result<PathBuf> {

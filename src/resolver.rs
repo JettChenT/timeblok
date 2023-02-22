@@ -55,14 +55,14 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
     for record in records {
         match record {
             Record::Event(event) => {
-                let event = resolve_event(&event, &(*baseref));
+                let event = resolve_event(&event, &baseref);
                 match event {
                     Ok(event) => resolved.push(ExactRecord::Event(event)),
                     Err(e) => eprintln!("Error resolving event: {}", e),
                 }
             }
             Record::Occasion(occasion) => {
-                let fixed_occasion = resolve_occasion(&occasion, &(*baseref));
+                let fixed_occasion = resolve_occasion(&occasion, &baseref);
                 // PERFORMANCE: update base inplace
                 match fixed_occasion {
                     Ok(o) => {
@@ -124,12 +124,12 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
 pub fn resolve_occasion(occasion: &DateTime, base: &Environment) -> Result<ExactDateTime> {
     Ok(ExactDateTime {
         date: if let Some(date) = &occasion.date {
-            resolve_date(date, &base)?
+            resolve_date(date, base)?
         } else {
             base.date_time.date
         },
         time: if let Some(time) = &occasion.time {
-            resolve_time(time, &base)?
+            resolve_time(time, base)?
         } else {
             base.date_time.time
         },
@@ -223,7 +223,7 @@ pub fn resolve_event(event: &Event, base: &Environment) -> Result<ExactEvent> {
 pub fn resolve_range(range: &Range, base: &Environment) -> Result<ExactRange> {
     Ok(match range {
         Range::AllDay(date) => {
-            let date = resolve_date(date, &base)?;
+            let date = resolve_date(date, base)?;
             ExactRange::AllDay(date)
         }
         Range::Time(time_range) => {

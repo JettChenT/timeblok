@@ -1,15 +1,15 @@
-use std::{collections::HashSet, rc::Rc, sync::Arc};
+use std::{collections::HashSet};
 
 use crate::{
     environment::Environment,
     ir::{
-        filter::{Filter, BDF},
+        filter::{Filter},
         Date, ExactDate,
     },
     resolver::resolve_date,
 };
 use chrono::NaiveDate;
-use icalendar::{Calendar, Component, DatePerhapsTime};
+use icalendar::{Calendar, Component};
 
 #[derive(Debug, Clone)]
 pub struct SetFilter {
