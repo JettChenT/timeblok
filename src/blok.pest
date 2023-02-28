@@ -22,9 +22,10 @@ OP = _{OR|AND}
 FILTER = {
     "{"~
     (
+       NEWLINE*~
 	   (FILTER|UNIT_FILTER)
-       ~SP~
-       (OP~(FILTER|UNIT_FILTER))*
+       ~
+       (NEWLINE*~OP~NEWLINE*~(FILTER|UNIT_FILTER))*~NEWLINE*
     )
     ~"}"
 }
@@ -49,7 +50,7 @@ UNIT_DATE_FILTER = {NOT? ~ (
 )}
 
 DATE_FILTER = {
-    "{"~UNIT_DATE_FILTER~(SP~OP~SP~UNIT_DATE_FILTER)*~"}"
+    "{"~NEWLINE*~UNIT_DATE_FILTER~(NEWLINE*~OP~NEWLINE*~UNIT_DATE_FILTER)*~NEWLINE*~"}"
 }
 
 FLEX_DATE = {FLEX_FIELD~"-"~FLEX_FIELD~"-"~FLEX_FIELD}
