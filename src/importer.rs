@@ -1,11 +1,8 @@
-use std::{collections::HashSet};
+use std::collections::HashSet;
 
 use crate::{
     environment::Environment,
-    ir::{
-        filter::{Filter},
-        Date, ExactDate,
-    },
+    ir::{filter::Filter, Date, ExactDate},
     resolver::resolve_date,
 };
 use chrono::NaiveDate;

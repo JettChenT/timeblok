@@ -77,7 +77,7 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
             }
             Record::Command(cmd) => {
                 if let Err(e) = cmd.run(baseref.as_ref()) {
-                    eprintln!("Error when resolving Command: {}", e);
+                    eprintln!("Error when resolving Command: {:?}", e);
                 }
             }
             Record::FlexOccasion(occasion) => {

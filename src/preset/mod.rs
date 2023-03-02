@@ -1,8 +1,10 @@
 mod workalendar;
 
+use std::fs::File;
+use std::io::Read;
 use std::rc::Rc;
 
-use crate::environment::{Environment};
+use crate::environment::Environment;
 use crate::importer::SetFilter;
 use crate::ir::command::Command;
 use crate::ir::filter::ExcludeFilt;
@@ -11,6 +13,9 @@ use crate::ir::{Date, ExactDate, Value};
 use crate::resolver::resolve_date;
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Weekday};
+use icalendar::Calendar;
+use crate::utils::{download_file, get_dir};
+use std::str::FromStr;
 
 use self::workalendar::{get_holiday, get_workdays};
 
@@ -18,6 +23,17 @@ impl ExactDate {
     fn weekday(&self) -> Result<Weekday> {
         Ok(self.to_chrono()?.weekday())
     }
+}
+
+fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&Environment, &[Value]) -> Result<()>>) -> Result<()> {
+    env.set(
+        name,
+        IdentData::Command(Command{
+            name: name.to_string(),
+            arity,
+            func,
+        })
+    )
 }
 
 fn insert_region(env: &mut Environment) -> Result<()> {
@@ -120,6 +136,34 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
                 }
             }),
         }),
+    )?;
+    insert_command(env, "import", 2,
+        Rc::new(|env: &Environment, args: &[Value]| {
+            if let (Value::Ident(ident), Value::Ident(name)) = (&args[0], &args[1]) {
+                let url = &ident.name;
+                if url.ends_with("ics") {
+                //     download url from internet and add ics filter
+                    let loc = get_dir()?.join("ics").join(&url);
+                    download_file(url, loc.clone(), None)?;
+                    let mut contents = String::new();
+                    File::open(loc)?.read_to_string(&mut contents)?;
+                    return match Calendar::from_str(&contents) {
+                        Ok(cal) => {
+                            let filt = SetFilter::from_ics(&cal);
+                            env.set(
+                            name.name.as_str(),
+                                IdentData::Value(Value::DateFilter(Box::new(filt))),
+                            )?;
+                            Ok(())
+                        },
+                        Err(e) => Err(anyhow!(e)),
+                    }
+                }
+                Ok(())
+            } else {
+                Err(anyhow!(format!("The argument must be an identity.")))
+            }
+        })
     )?;
     Ok(())
 }

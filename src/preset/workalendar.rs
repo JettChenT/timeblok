@@ -4,46 +4,22 @@ use directories::ProjectDirs;
 use icalendar::Calendar;
 use std::fs::create_dir_all;
 
-use std::path::{PathBuf};
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::{fs, fs::File, io::Read};
 
-
 use reqwest::Url;
+use crate::utils::{download_file, get_dir};
 
-fn get_dir() -> Result<PathBuf> {
-    if let Some(dir) = ProjectDirs::from("", "", "timeblok") {
-        let data_dir = dir.data_dir().join("workalendar");
-        create_dir_all(&data_dir)?;
-        Ok(data_dir)
-    } else {
-        Err(anyhow!("Cannot find project directory"))
-    }
-}
+
 
 fn download_workdays(country: &String) -> Result<()> {
-    let url = Url::parse(
-        format!(
+    let url = format!(
             "https://raw.githubusercontent.com/JettChenT/workalendar-hub/main/workingdays/{}.txt",
             country
-        )
-        .as_str(),
-    )?;
-    eprintln!("downloading {} holidays calendar...", country);
-    let response = reqwest::blocking::get(url)?;
-    if !response.status().is_success() {
-        return Err(anyhow!("Cannot download calendar: {}", response.text()?));
-    }
-    let dest = {
-        let dir = get_dir()?.join("workdays");
-        fs::create_dir_all(&dir)?;
-        let fpath = dir.join(format!("{}.txt", country));
-        File::create(&fpath)?;
-        fpath
-    };
-    // write contents of response to dest
-    fs::write(dest, response.bytes()?)?;
-    Ok(())
+    );
+    let dest = get_dir()?.join("workdays").join(format!("{}.txt", country));
+    download_file(&url, dest, Some(format!("{} calendar", country).as_str()))
 }
 
 pub fn get_workdays(country: &String, new: bool) -> Result<Vec<NaiveDate>> {

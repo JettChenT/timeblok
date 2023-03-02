@@ -1,7 +1,6 @@
 use crate::environment::Environment;
-use crate::ir::filter::{Filter};
+use crate::ir::filter::Filter;
 use crate::ir::Date;
-
 
 use std::fmt::Debug;
 use std::rc::Rc;

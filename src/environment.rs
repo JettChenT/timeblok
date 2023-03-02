@@ -3,13 +3,12 @@ use crate::ir::NumVal::Number;
 use crate::ir::{
     ident::IdentData, Date, DateTime, ExactDate, ExactDateTime, FlexDate, FlexField, NumVal,
 };
-use crate::resolver::{resolve_date};
-use anyhow::{Result};
+use crate::resolver::resolve_date;
+use anyhow::Result;
 use chrono::NaiveDate;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-
 
 #[derive(Debug)]
 pub struct Environment {
@@ -162,9 +161,7 @@ impl Environment {
 }
 
 mod tests {
-    
-    
-    
+
     #[test]
     fn test_env() {
         use super::*;
