@@ -17,6 +17,8 @@ Inspired by Cal Newport's [Text File Time Blocking](https://www.calnewport.com/b
 TimeBlok offers a minimalistic syntax for organizing your schedule within plain text files, 
 as well as the ability to compile to .ics files for use in any calendar application.
 
+[Join](https://discord.gg/MXxsyAaeFg) our discord server!
+
 ## Examples
 ### Daily planning
 This is the simplest use case
@@ -87,6 +89,9 @@ Help:
 ```bash
 $ timeblok --help
 ```
+
+## Integrations
+- VSCode (Syntax Highlighting) [marketplace](https://marketplace.visualstudio.com/items?itemName=JettChenT.vscode-timeblok)
 
 ## Specs 
 The TimeBlock language the following statements:
