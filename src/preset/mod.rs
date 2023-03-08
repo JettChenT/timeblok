@@ -5,12 +5,12 @@ use std::io::Read;
 use std::rc::Rc;
 
 use crate::environment::Environment;
-use crate::importer::SetFilter;
-use crate::ir::command::Command;
+use crate::importer::{ics_to_records, import_ics, SetFilter};
+use crate::ir::command::{Command, CommandRes};
 use crate::ir::filter::ExcludeFilt;
 use crate::ir::ident::{DynFilter, IdentData};
 use crate::ir::{Date, ExactDate, Value};
-use crate::resolver::resolve_date;
+use crate::resolver::{resolve_date, ResolverAction};
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Weekday};
 use icalendar::Calendar;
@@ -25,7 +25,7 @@ impl ExactDate {
     }
 }
 
-fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&Environment, &[Value]) -> Result<()>>) -> Result<()> {
+fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&Environment, &[Value]) -> Result<CommandRes>>) -> Result<()> {
     env.set(
         name,
         IdentData::Command(Command{
@@ -50,7 +50,7 @@ fn insert_region(env: &mut Environment) -> Result<()> {
                         &format!("{}weekend", &ident.name),
                         IdentData::Value(Value::DateFilter(Box::new(filt))),
                     )?;
-                    Ok(())
+                    Ok(None)
                 } else {
                     Err(anyhow!(format!("The argument must be an identity.")))
                 }
@@ -79,7 +79,7 @@ fn insert_region(env: &mut Environment) -> Result<()> {
                         ))))),
                     )?;
                 }
-                Ok(())
+                Ok(None)
             }),
         }),
     )?;
@@ -97,7 +97,7 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
                 if let Value::Ident(ident) = &args[0] {
                     if let Some(dat) = env.get(&ident.name) {
                         println!("{} : {:?}", &ident.name, dat);
-                        Ok(())
+                        Ok(None)
                     } else {
                         Err(anyhow!(format!("Identity {} not found", &ident.name)))
                     }
@@ -115,7 +115,7 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
             func: Rc::new(|env: &Environment, args: &[Value]| {
                 if let Value::Ident(ident) = &args[0] {
                     env.set(&ident.name, IdentData::Value(args[1].clone()))?;
-                    Ok(())
+                    Ok(None)
                 } else {
                     Err(anyhow!("First argument for /set must be an identity."))
                 }
@@ -130,38 +130,54 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
             func: Rc::new(|env: &Environment, args: &[Value]| {
                 if let Value::Ident(ident) = &args[0] {
                     env.del(&ident.name)?;
-                    Ok(())
+                    Ok(None)
                 } else {
                     Err(anyhow!("First argument for /del must be an identity."))
                 }
             }),
         }),
     )?;
-    insert_command(env, "import", 2,
+    insert_command(env, "import", 0,
         Rc::new(|env: &Environment, args: &[Value]| {
-            if let (Value::Ident(ident), Value::Ident(name)) = (&args[0], &args[1]) {
-                let url = &ident.name;
-                if url.ends_with("ics") {
-                //     download url from internet and add ics filter
-                    let loc = get_dir()?.join("ics").join(&url);
-                    download_file(url, loc.clone(), None)?;
-                    let mut contents = String::new();
-                    File::open(loc)?.read_to_string(&mut contents)?;
-                    return match Calendar::from_str(&contents) {
-                        Ok(cal) => {
-                            let filt = SetFilter::from_ics(&cal);
-                            env.set(
-                            name.name.as_str(),
-                                IdentData::Value(Value::DateFilter(Box::new(filt))),
-                            )?;
-                            Ok(())
-                        },
-                        Err(e) => Err(anyhow!(e)),
+            match args.len() {
+                1 => {
+                    if let Value::Ident(ident) = &args[0] {
+                        let url = &ident.name;
+                        if url.ends_with("ics") {
+                            return match import_ics(url) {
+                                Ok(cal) => {
+                                    Ok(Some(vec![ResolverAction::InsertRecords(ics_to_records(&cal))]))
+                                },
+                                Err(e) => Err(anyhow!(e))
+                            }
+                        }else{
+                            Err(anyhow!("unsupported file format"))
+                        }
+                    }else{
+                        Err(anyhow!("1-parameter `import` clause must contain an ident"))
                     }
                 }
-                Ok(())
-            } else {
-                Err(anyhow!(format!("The argument must be an identity.")))
+                2 => {
+                    if let (Value::Ident(ident), Value::Ident(name)) = (&args[0], &args[1]) {
+                        let url = &ident.name;
+                        if url.ends_with("ics") {
+                            //     download url from internet and add ics filter
+                            return match import_ics(url) {
+                                Ok(cal) => {
+                                    let filt = SetFilter::from_ics(&cal);
+                                    env.set(
+                                        name.name.as_str(),
+                                        IdentData::Value(Value::DateFilter(Box::new(filt))),
+                                    )?;
+                                    Ok(None)
+                                },
+                                Err(e) => Err(anyhow!(e)),
+                            }
+                        }
+                        Ok(None)
+                    }else{Err(anyhow!("The two arguments must be `ident`s"))}
+                }
+                n => Err(anyhow!("Unexpected argument length: {}", n))
             }
         })
     )?;

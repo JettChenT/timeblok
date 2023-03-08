@@ -1,4 +1,8 @@
 use std::collections::HashSet;
+use std::fs::File;
+use std::io::Read;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use crate::{
     environment::Environment,
@@ -7,6 +11,9 @@ use crate::{
 };
 use chrono::NaiveDate;
 use icalendar::{Calendar, Component};
+use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, ExactTimeRange};
+use anyhow::{Result, anyhow};
+use crate::utils::{download_file, get_dir};
 
 #[derive(Debug, Clone)]
 pub struct SetFilter {
@@ -55,4 +62,58 @@ impl SetFilter {
         }
         Self { dates }
     }
+}
+
+pub fn import_ics(url: &String) -> Result<Calendar>{
+    let contents = if url.starts_with("http") {
+        let loc = get_dir()?.join("ics").join(&url);
+        download_file(url, loc.clone(), None)?;
+        let mut contents = String::new();
+        File::open(loc)?.read_to_string(&mut contents)?;
+        contents
+    } else {
+        let mut contents = String::new();
+        File::open(PathBuf::from_str(url.as_str())?)?.read_to_string(&mut contents)?;
+        contents
+    };
+    match Calendar::from_str(&contents) {
+        Ok(cal) => Ok(cal),
+        Err(e) => Err(anyhow!(e))
+    }
+}
+
+pub fn ics_to_records(cal: &Calendar) -> Vec<ExactRecord>{
+    let mut records = vec![];
+    for c in cal.iter(){
+        if let Some(event) = c.as_event() {
+            let range  = match (event.get_start(), event.get_end()) {
+                (Some(st), Some(nd)) => {
+                    let est = ExactDateTime::from_date_perhaps_time(st);
+                    let end  = ExactDateTime::from_date_perhaps_time(nd);
+                    ExactRange::TimeRange(ExactTimeRange{
+                        start: est,
+                        end
+                    })
+                }
+                (Some(st), None) => {
+                    let est = ExactDate::from_date_perhaps_time(st);
+                    ExactRange::AllDay(est)
+                }
+                (None, Some(nd)) => {
+                    let end = ExactDate::from_date_perhaps_time(nd);
+                    ExactRange::AllDay(end)
+                }
+                (_, _) => {continue;}
+            };
+            records.push(ExactRecord::Event(ExactEvent{
+                range,
+                name: event.get_summary().unwrap_or("").to_string(),
+                notes: match event.get_description() {
+                    Some(s) => Some(s.to_string()),
+                    None => None
+                }
+            }))
+        }
+    }
+    records
 }

@@ -2,7 +2,7 @@ SP = _{" "*}
 WHITESPACE = _{ " " }
 COMMENT = _{"//"~(!NEWLINE~ANY)*}
 NUM_FIELD = {ASCII_DIGIT+}
-IDENT = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+IDENT = @{ ASCII_ALPHA ~ (!(WHITESPACE|NEWLINE) ~ ASCII)* }
 AND = {"&" | "and"}
 OR = {","|"|" | "or"}
 NOT = {"!" | "not"}
@@ -57,8 +57,8 @@ FLEX_DATE = {FLEX_FIELD~"-"~FLEX_FIELD~"-"~FLEX_FIELD}
 FLEX_DATETIME = {FLEX_DATE ~ SP ~ TIME}
 FLEX_OCCASION = {FLEX_DATETIME | FLEX_DATE | TIME | DATE_FILTER} // Don't see much value in bringing flex to time in day.
 
-ARG = _{ FILTER | DATE_FILTER | IDENT | NUM_FIELD}
-COMMAND = {"/" ~ ARG*}
+ARG = _{ FILTER | DATE_FILTER | NUM_FIELD| IDENT }
+COMMAND = ${"/" ~ (ARG~WHITESPACE)* ~ ARG ~ (NEWLINE|EOI)}
 
 RANGE = {OCCASION ~ SP ~ "~" ~ SP ~ OCCASION}
 EVENT_HEADER = {(RANGE | OCCASION) ~ SP ~ NOTE_LINE}

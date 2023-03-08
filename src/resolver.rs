@@ -7,8 +7,15 @@ use chrono::Local;
 use chrono::{prelude as cr, Datelike, Timelike};
 use std::rc::Rc;
 use std::time::SystemTime;
+use crate::ir::ident::{Ident, IdentData};
 
 // TODO: Change all resolve to Result<> based
+
+pub enum ResolverAction {
+    Set(Ident, IdentData),
+    InsertRecord(ExactRecord),
+    InsertRecords(Vec<ExactRecord>)
+}
 
 pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
     let base_time: cr::DateTime<Local> = created.into();
@@ -76,8 +83,18 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
                 resolved.push(ExactRecord::Note(note.to_string()));
             }
             Record::Command(cmd) => {
-                if let Err(e) = cmd.run(baseref.as_ref()) {
-                    eprintln!("Error when resolving Command: {:?}", e);
+                match cmd.run(baseref.as_ref()) {
+                    Err(e) => {eprintln!("Error when resolving Command: {:?}", e);}
+                    Ok(Some(cmds)) => {
+                        for c in cmds {
+                            match c {
+                                ResolverAction::Set(ident, data) => {baseref.as_ref().set(ident.name.as_str(), data).unwrap();},
+                                ResolverAction::InsertRecord(rec) => {resolved.push(rec);},
+                                ResolverAction::InsertRecords(recs) => {resolved.extend(recs);}
+                            }
+                        }
+                    }
+                    Ok(_) => {}
                 }
             }
             Record::FlexOccasion(occasion) => {

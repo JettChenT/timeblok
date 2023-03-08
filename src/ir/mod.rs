@@ -1,5 +1,5 @@
 use crate::ir::filter::{Filter, BDF};
-use chrono::{Datelike, NaiveDate};
+use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, NaiveWeek, Timelike};
 use icalendar::{CalendarDateTime, DatePerhapsTime};
 
 use self::{command::CommandCall, ident::Ident};
@@ -231,6 +231,16 @@ impl DateTime {
     }
 }
 
+impl ExactTime{
+    pub fn from_naive(naive: NaiveTime) -> Self{
+        Self{
+            hour: naive.hour(),
+            minute: naive.minute(),
+            second: naive.second()
+        }
+    }
+}
+
 impl ExactDateTime {
     pub fn from_ymd_hms(
         year: i32,
@@ -248,6 +258,34 @@ impl ExactDateTime {
                 second,
             },
             tz: TimeZoneChoice::Local,
+        }
+    }
+
+    pub fn from_naive(naive: NaiveDateTime) -> Self{
+        Self{
+            date: ExactDate::from_naive(naive.date()),
+            time: ExactTime::from_naive(naive.time()),
+            tz: TimeZoneChoice::Local
+        }
+    }
+
+    pub fn from_date_perhaps_time(d: DatePerhapsTime) -> Self{
+        match d{
+            DatePerhapsTime::Date(d) => Self{
+                date: ExactDate::from_naive(d),
+                time: ExactTime{hour: 0, minute:0, second:0},
+                tz: TimeZoneChoice::Local
+            },
+            DatePerhapsTime::DateTime(dt) => match dt {
+                CalendarDateTime::Floating(f) => Self::from_naive(f),
+                CalendarDateTime::Utc(x) => Self{
+                    tz: TimeZoneChoice::Utc,
+                    ..Self::from_naive(x.naive_utc())
+                },
+                CalendarDateTime::WithTimezone {date_time, tzid: tz} => {
+                    Self::from_naive(date_time)
+                }
+            }
         }
     }
 }

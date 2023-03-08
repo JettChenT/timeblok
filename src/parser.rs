@@ -110,7 +110,11 @@ fn parse_command(pair: Pair<Rule>) -> Result<CommandCall> {
             Rule::DATE_FILTER => Value::DateFilter(parse_date_filter(nxt)?),
             Rule::IDENT => Value::Ident(parse_ident(nxt)?),
             Rule::NUM_FIELD => Value::Num(parse_numval(nxt)?),
-            _ => unreachable!("Invalid rule"),
+            Rule::EOI => {break;}
+            r => {
+                eprintln!("unexpected rule: {:?}", r);
+                unreachable!()
+            },
         };
         args.push(res);
     }
