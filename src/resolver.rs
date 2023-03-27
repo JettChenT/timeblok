@@ -1,6 +1,7 @@
 use crate::environment::Environment;
 use crate::ir::NumVal::{Number, Unsure};
 use crate::ir::*;
+#[cfg(not(target_family = "wasm"))]
 use crate::preset::insert_preset;
 use anyhow::{anyhow, Result};
 use chrono::Local;
@@ -17,26 +18,7 @@ pub enum ResolverAction {
     InsertRecords(Vec<ExactRecord>)
 }
 
-pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
-    let base_time: cr::DateTime<Local> = created.into();
-    let base_t = ExactDateTime {
-        date: {
-            let date = base_time.date_naive();
-            ExactDate {
-                year: date.year(),
-                month: date.month(),
-                day: date.day(),
-            }
-        },
-        time: {
-            ExactTime {
-                hour: 0,
-                minute: 0,
-                second: 0,
-            }
-        },
-        tz: TimeZoneChoice::Local,
-    };
+pub fn resolve(records: Vec<Record>, base_t: ExactDateTime) -> Vec<ExactRecord> {
 
     let mut base = {
         let tyear = base_t.date.year;
@@ -55,6 +37,7 @@ pub fn resolve(records: Vec<Record>, created: SystemTime) -> Vec<ExactRecord> {
         )
     };
 
+    #[cfg(not(target_family = "wasm"))]
     insert_preset(&mut base).unwrap();
 
     let mut resolved = vec![];

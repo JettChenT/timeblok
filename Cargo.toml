@@ -13,31 +13,26 @@ repository = "https://github.com/JettChenT/timeblok"
 crate-type = ["cdylib"]
 
 [dependencies]
-clap = { version = "4.0.32", features = ["derive"] }
 pest = "2.5.2"
 pest_derive = "2.5.2"
 anyhow = {version = "1.0", features = ["backtrace"]}
 chrono = "0.4"
 icalendar = "0.15.0"
-open = "3"
 directories = "4.0"
 lazy_static = "1.4.0"
-edit = "0.1.4"
 dyn-clone = "1.0.10"
 reqwest = {version="0.11.14", features=["blocking"]}
 indicatif = "0.17.3"
 getrandom = { version = "0.2", features = ["js"] }
-wasm-bindgen = "0.2.84"
-js-sys = "0.3.61"
-wasm-bindgen-futures = "0.4.34"
 
-[dependencies.web-sys]
-version = "0.3.4"
-features = [
-    'Headers',
-    'Request',
-    'RequestInit',
-    'RequestMode',
-    'Response',
-    'Window',
-]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ['Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
+  'Window']}
+wasm-bindgen-futures = "0.4.34"
+js-sys = "0.3.61"
+futures = "0.3"
+wasm-bindgen = "0.2.84"
