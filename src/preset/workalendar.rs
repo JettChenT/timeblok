@@ -22,6 +22,7 @@ fn download_workdays(country: &String) -> Result<()> {
     download_file(&url, dest, Some(format!("{} calendar", country).as_str()))
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn get_workdays(country: &String, new: bool) -> Result<Vec<NaiveDate>> {
     let fpath = get_dir()?.join("workdays").join(format!("{}.txt", country));
     if new || !fpath.exists() {
