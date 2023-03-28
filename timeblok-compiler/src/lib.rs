@@ -40,3 +40,10 @@ pub fn resolved_to_ical(resolved: Vec<ir::ExactRecord>) -> Result<String> {
     let ical = converter::to_ical(resolved);
     Ok(ical)
 }
+
+pub fn compile(source: &str, base_time: ExactDateTime) -> Result<String> {
+    let records = tb_to_records(&source.to_string())?;
+    let resolved = records_to_resolved(records, base_time)?;
+    let ical = resolved_to_ical(resolved)?;
+    Ok(ical)
+}
