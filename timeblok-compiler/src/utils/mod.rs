@@ -15,8 +15,6 @@ use chrono::{prelude as cr, Datelike, Timelike};
 use web_sys::{Request, RequestInit, RequestMode, Response};
 #[cfg(target_family = "wasm")]
 use wasm_bindgen::prelude::*;
-use std::io::Write;
-use futures::future::TryFutureExt;
 
 #[cfg(not(target_family = "wasm"))]
 pub fn download_file(filename:&str, dest:PathBuf, display_name: Option<&str>) -> Result<()>{
@@ -59,6 +57,15 @@ pub async fn download_file_wasm(filename: &str, dest: PathBuf, display_name: Opt
     Ok(())
 }
 
+pub enum Dirs{
+    Project,
+    Data,
+    Cache,
+    Base,
+}
+
+// TODO: update this to match wasm implementation
+#[cfg(not(target_family = "wasm"))]
 pub fn get_dir() -> Result<PathBuf> {
     if let Some(dir) = ProjectDirs::from("", "", "timeblok") {
         let data_dir = dir.data_dir().join("workalendar");
@@ -69,6 +76,20 @@ pub fn get_dir() -> Result<PathBuf> {
     }
 }
 
+#[cfg(target_family = "wasm")]
+pub fn get_dir(dir: Dirs, subdir: Option<&String>) -> Result<PathBuf> {
+    use Dirs::*;
+    let mut path = match dir {
+        Project => PathBuf::from("project"),
+        Data => PathBuf::from("data"),
+        Cache => PathBuf::from("cache"),
+        Base => PathBuf::from("base"),
+    };
+    if let Some(subdir) = subdir {
+        path.push(subdir);
+    }
+    Ok(path)
+}
 
 impl ExactDateTime{
     pub fn from_system_time(base_t: SystemTime) -> Self{

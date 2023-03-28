@@ -10,7 +10,7 @@ extern crate core;
 mod converter;
 mod environment;
 mod importer;
-mod ir;
+pub mod ir;
 mod output;
 mod parser;
 #[cfg(not(target_family = "wasm"))]

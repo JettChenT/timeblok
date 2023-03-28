@@ -2,7 +2,7 @@ use crate::ir::{
     ExactDate, ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, TimeZoneChoice,
 };
 use anyhow::{anyhow, Result};
-use chrono::LocalResult::Single;
+use chrono::LocalResult::{Single, self};
 use chrono::{prelude as cr, Datelike, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 use chrono::{Local, TimeZone, Utc};
 use icalendar as ical;
@@ -64,6 +64,14 @@ impl ExactDateTime {
                 second: t.second(),
             },
             tz: TimeZoneChoice::Utc,
+        }
+    }
+
+    pub fn from_timestamp(timestamp: i64) -> Option<Self> {
+        match Utc.timestamp_opt(timestamp, 0) {
+            LocalResult::None => None,
+            LocalResult::Ambiguous(_, _) => None,
+            LocalResult::Single(t) => Some(Self::from_chrono(t)),
         }
     }
 }

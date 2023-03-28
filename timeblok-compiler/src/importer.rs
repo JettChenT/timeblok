@@ -13,7 +13,9 @@ use chrono::NaiveDate;
 use icalendar::{Calendar, Component};
 use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, ExactTimeRange};
 use anyhow::{Result, anyhow};
-use crate::utils::{download_file, get_dir};
+use crate::utils::get_dir;
+#[cfg(not(target_family = "wasm"))]
+use crate::utils::download_file;
 
 #[derive(Debug, Clone)]
 pub struct SetFilter {
@@ -64,8 +66,10 @@ impl SetFilter {
     }
 }
 
+
+#[cfg(not(target_family = "wasm"))]
 pub fn import_ics(url: &String) -> Result<Calendar>{
-    let contents = if url.starts_with("http") {
+    let contents = if url.starts_with("http"){
         let loc = get_dir()?.join("ics").join(&url);
         download_file(url, loc.clone(), None)?;
         let mut contents = String::new();
@@ -76,6 +80,16 @@ pub fn import_ics(url: &String) -> Result<Calendar>{
         File::open(PathBuf::from_str(url.as_str())?)?.read_to_string(&mut contents)?;
         contents
     };
+    match Calendar::from_str(&contents) {
+        Ok(cal) => Ok(cal),
+        Err(e) => Err(anyhow!(e))
+    }
+}
+
+#[cfg(target_family = "wasm")]
+pub fn import_ics(url: &String) -> Result<Calendar>{
+    let mut contents = String::new();
+    File::open(PathBuf::from_str(url.as_str())?)?.read_to_string(&mut contents)?;
     match Calendar::from_str(&contents) {
         Ok(cal) => Ok(cal),
         Err(e) => Err(anyhow!(e))
