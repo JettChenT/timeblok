@@ -1,33 +1,15 @@
-extern crate pest;
-#[macro_use]
-extern crate pest_derive;
-extern crate core;
-
-use crate::parser::{parse_file, Rule};
 use anyhow::{anyhow, Result};
 use directories::{BaseDirs, ProjectDirs};
 
-use pest::Parser;
 use std::fs;
 use std::io::Write;
 
-mod args;
-mod converter;
-mod environment;
-mod importer;
-mod ir;
-mod output;
-mod parser;
-mod preset;
-mod resolver;
-mod utils;
+use timeblok::{tb_to_records, records_to_resolved, resolved_to_ical, ir::ExactDateTime};
 
-use converter::to_ical;
-use parser::BlokParser;
-use resolver::resolve;
+use crate::args::{parse, Args};
 
-fn main() {
-    let args = args::parse();
+pub fn main() {
+    let args = parse();
     match try_main(args) {
         Ok(_) => {}
         Err(e) => {
@@ -62,25 +44,20 @@ fn handle_infile(infile: Option<String>, new: bool) -> Result<String> {
     }
 }
 
-fn try_main(args: args::Args) -> Result<()> {
+fn try_main(args: Args) -> Result<()> {
     let infile = handle_infile(args.infile, args.new)?;
     let metadata = fs::metadata(&infile)?;
     let created = metadata.created()?;
-    let file = fs::read_to_string(&infile).unwrap();
-    let file = BlokParser::parse(Rule::FILE, &file)
-        .expect("Unsuccessful parse")
-        .next()
-        .unwrap();
-
-    let records = parse_file(file)?;
+    let file = fs::read_to_string(&infile)?;
+    let records = tb_to_records(&file)?;
     if args.print {
         println!("{:#?}", records);
     }
     if args.parse_only {
         return Ok(());
     }
-    let resolved = resolve(records, created);
-    let converted = to_ical(resolved);
+    let resolved = records_to_resolved(records, ExactDateTime::from_system_time(created))?;
+    let converted = resolved_to_ical(resolved)?;
     match &args.outfile {
         Some(path) => {
             let mut file = fs::File::create(path)?;

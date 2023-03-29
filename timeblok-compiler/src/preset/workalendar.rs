@@ -1,6 +1,5 @@
 use anyhow::{anyhow, Result};
 use chrono::NaiveDate;
-use directories::ProjectDirs;
 use icalendar::Calendar;
 use std::fs::create_dir_all;
 
@@ -10,8 +9,6 @@ use std::{fs, fs::File, io::Read};
 
 use reqwest::Url;
 use crate::utils::{download_file, get_dir};
-
-
 
 fn download_workdays(country: &String) -> Result<()> {
     let url = format!(

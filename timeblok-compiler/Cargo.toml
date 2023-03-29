@@ -1,0 +1,35 @@
+[package]
+name = "timeblok"
+description = "A language for event scheduling in plain text"
+
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+authors.workspace = true
+homepage.workspace = true
+
+[dependencies]
+pest = "2.5.2"
+pest_derive = "2.5.2"
+anyhow = {version = "1.0", features = ["backtrace"]}
+chrono = "0.4"
+icalendar = "0.15.0"
+directories = "4.0"
+lazy_static = "1.4.0"
+dyn-clone = "1.0.10"
+reqwest = {version="0.11.14", features=["blocking"]}
+indicatif = "0.17.3"
+getrandom = { version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ['Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
+  'Window']}
+wasm-bindgen-futures = "0.4.34"
+js-sys = "0.3.61"
+futures = "0.3"
+wasm-bindgen = "0.2.84"
