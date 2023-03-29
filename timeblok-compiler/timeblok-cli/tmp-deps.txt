@@ -1,2 +1,0 @@
-clap = { version = "4.0.32", features = ["derive"] }
-edit = "0.1.4"

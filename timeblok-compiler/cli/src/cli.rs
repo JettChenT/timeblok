@@ -1,17 +1,15 @@
-use crate::ir::ExactDateTime;
-use crate::parser::{parse_file, Rule};
 use anyhow::{anyhow, Result};
 use directories::{BaseDirs, ProjectDirs};
 
 use std::fs;
 use std::io::Write;
 
-use crate::converter::to_ical;
-use crate::resolver::resolve;
-use crate::{args, tb_to_records};
+use timeblok::{tb_to_records, records_to_resolved, resolved_to_ical, ir::ExactDateTime};
+
+use crate::args::{parse, Args};
 
 pub fn main() {
-    let args = args::parse();
+    let args = parse();
     match try_main(args) {
         Ok(_) => {}
         Err(e) => {
@@ -46,7 +44,7 @@ fn handle_infile(infile: Option<String>, new: bool) -> Result<String> {
     }
 }
 
-fn try_main(args: args::Args) -> Result<()> {
+fn try_main(args: Args) -> Result<()> {
     let infile = handle_infile(args.infile, args.new)?;
     let metadata = fs::metadata(&infile)?;
     let created = metadata.created()?;
@@ -58,8 +56,8 @@ fn try_main(args: args::Args) -> Result<()> {
     if args.parse_only {
         return Ok(());
     }
-    let resolved = resolve(records, ExactDateTime::from_system_time(created));
-    let converted = to_ical(resolved);
+    let resolved = records_to_resolved(records, ExactDateTime::from_system_time(created))?;
+    let converted = resolved_to_ical(resolved)?;
     match &args.outfile {
         Some(path) => {
             let mut file = fs::File::create(path)?;

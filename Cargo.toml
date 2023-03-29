@@ -1,5 +1,14 @@
 [workspace]
 members = [
     "timeblok-compiler",
+    "timeblok-compiler/cli",
     "timeblok-js"
 ]
+
+[workspace.package]
+version = "0.3.0"
+edition="2021"
+license = "MIT/Apache-2.0"
+homepage = "https://github.com/JettChenT/timeblok"
+repository = "https://github.com/JettChenT/timeblok"
+authors = ["contact@jettchen.me"]

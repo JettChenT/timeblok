@@ -1,13 +1,13 @@
 [package]
 name = "timeblok"
-version = "0.2.1"
-edition = "2021"
-authors = ["contact@jettchen.me"]
-license = "MIT/Apache-2.0"
 description = "A language for event scheduling in plain text"
-homepage = "https://github.com/JettChenT/timeblok"
-repository = "https://github.com/JettChenT/timeblok"
 
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+authors.workspace = true
+homepage.workspace = true
 
 [dependencies]
 pest = "2.5.2"
