@@ -9,9 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.9",
+    "daisyui": "^2.51.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "timeblok-js": "file:../timeblok-js/pkg"
+    "timeblok-js": "file:../timeblok-js"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",
