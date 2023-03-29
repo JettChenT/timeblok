@@ -1,5 +1,6 @@
 use timeblok::ir::ExactDateTime;
 use wasm_bindgen::prelude::*;
+mod utils;
 
 #[wasm_bindgen]
 pub fn compile(source: &str, base_time: i64) -> Option<String> {
