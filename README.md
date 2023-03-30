@@ -4,7 +4,7 @@
 <a href="https://discord.gg/MXxsyAaeFg"><img alt="discord invitation link" src="https://dcbadge.vercel.app/api/server/MXxsyAaeFg?style=flat"></a>
 
 ```bash
-cargo install timeblok  # install timeblok 
+cargo install timeblok-cli  # install timeblok 
 timeblok -no            # create&write a new blok file, and open it in your calendar app! 
 ```
 
@@ -64,7 +64,7 @@ is required.
 
 Installing from cargo:
 ```bash
-$ cargo install timeblok
+$ cargo install timeblok-cli
 ```
 
 

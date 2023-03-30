@@ -3,13 +3,11 @@ name = "timeblok-js"
 description = "WASM bindings for Timeblok"
 
 edition.workspace = true
-# license.workspace = true
-# repository.workspace = true
+license.workspace = true
+repository.workspace = true
 version.workspace = true
 authors.workspace = true
 homepage.workspace = true
-license = "MIT/Apache-2.0"
-repository = "https://github.com/PRQL/prql"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

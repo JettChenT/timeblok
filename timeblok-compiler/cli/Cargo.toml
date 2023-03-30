@@ -11,6 +11,10 @@ homepage.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "timeblok"
+path = "src/main.rs"
+
 [target.'cfg(not(target_family="wasm"))'.dependencies]
 clap = { version = "4.0.32", features = ["derive"] }
 edit = "0.1.4"
