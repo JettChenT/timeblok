@@ -239,6 +239,12 @@ impl ExactTime{
             second: naive.second()
         }
     }
+
+    pub fn from_hms(hour: u32, minute: u32, second: u32) -> Self {
+        Self {
+            hour, minute, second
+        }
+    }
 }
 
 impl ExactDateTime {

@@ -71,7 +71,9 @@ impl ExactDateTime {
         match Utc.timestamp_opt(timestamp, 0) {
             LocalResult::None => None,
             LocalResult::Ambiguous(_, _) => None,
-            LocalResult::Single(t) => Some(Self::from_chrono(t)),
+            LocalResult::Single(t) => Some(
+                Self { time: ExactTime::from_hms(0, 0, 0), ..Self::from_chrono(t)}
+            ),
         }
     }
 }
