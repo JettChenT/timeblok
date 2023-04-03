@@ -68,7 +68,7 @@ impl ExactDateTime {
     }
 
     pub fn from_timestamp(timestamp: i64) -> Option<Self> {
-        match Utc.timestamp_opt(timestamp, 0) {
+        match Utc.timestamp_millis_opt(timestamp) {
             LocalResult::None => None,
             LocalResult::Ambiguous(_, _) => None,
             LocalResult::Single(t) => Some(
@@ -123,4 +123,25 @@ pub fn to_ical(records: Vec<ExactRecord>) -> String {
     }
     calendar = calendar.done();
     calendar.to_string()
+}
+
+// test
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+    use anyhow::Result;
+
+    #[test]
+    fn test_timestamp() -> Result<()>{
+        let timestamp = 1680533997811;
+        if let Some(res) = ExactDateTime::from_timestamp(timestamp){
+            assert_eq!(res.date.year, 2023);
+            assert_eq!(res.date.month, 4);
+            assert_eq!(res.date.day, 3);
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("failed to parse timestamp"))
+        }
+    }
 }
