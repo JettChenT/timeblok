@@ -1,7 +1,7 @@
 SP = _{" "*}
 WHITESPACE = _{ " " }
 COMMENT = _{"//"~(!NEWLINE~ANY)*}
-NUM_FIELD = {ASCII_DIGIT+}
+NUM_FIELD = @{ASCII_DIGIT+}
 IDENT = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
 AND = {"&" | "and"}
 OR = {","|"|" | "or"}
