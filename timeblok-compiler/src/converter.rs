@@ -7,6 +7,7 @@ use chrono::{prelude as cr, Datelike, NaiveDate, NaiveDateTime, NaiveTime, Timel
 use chrono::{Local, TimeZone, Utc};
 use icalendar as ical;
 use icalendar::{Component, EventLike};
+use uuid::Uuid;
 
 impl ExactTime {
     pub fn to_chrono(self) -> Result<NaiveTime> {
@@ -79,11 +80,14 @@ impl ExactDateTime {
 }
 
 impl ExactEvent {
-    fn to_icalevent(&self) -> Result<ical::Event> {
+    fn to_icalevent(&self, key: Option<String>) -> Result<ical::Event> {
         let mut calevent = ical::Event::new();
         calevent.summary(self.name.as_str());
         if let Some(notes) = self.notes.as_ref() {
             calevent.description(notes.as_str());
+        }
+        if let Some(s) = key {
+            calevent.uid(Uuid::new_v3(&Uuid::NAMESPACE_URL, s.as_bytes()).to_string().as_str());
         }
         match &self.range {
             ExactRange::TimeRange(range) => {
@@ -92,13 +96,6 @@ impl ExactEvent {
                     .ends(range.end.to_chrono()?)
                     .done();
             }
-            // ExactRange::Duration(duration) => {
-            //     let shift = chrono::Duration::minutes(duration.duration as i64);
-            //     calevent = calevent
-            //         .starts(duration.start.to_chrono()?)
-            //         .ends(duration.start.to_chrono()?+shift)
-            //         .done();
-            // },
             ExactRange::AllDay(date) => {
                 calevent = calevent.all_day(date.to_chrono()?).done();
             }
@@ -107,11 +104,16 @@ impl ExactEvent {
     }
 }
 
-pub fn to_ical(records: Vec<ExactRecord>) -> String {
+pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
     let mut calendar = ical::Calendar::new();
-    for record in records {
+    for (i,record) in records.iter().enumerate() {
+        let key = if deterministic {
+            Some(i.to_string())
+        } else {
+            None
+        };
         if let ExactRecord::Event(event) = record {
-            match event.to_icalevent() {
+            match event.to_icalevent(key) {
                 Ok(calevent) => {
                     calendar.push(calevent);
                 }

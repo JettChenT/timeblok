@@ -36,7 +36,7 @@ pub fn records_to_resolved(records: Vec<ir::Record>, base_time: ExactDateTime) -
 }
 
 pub fn resolved_to_ical(resolved: Vec<ir::ExactRecord>) -> Result<String> {
-    let ical = converter::to_ical(resolved);
+    let ical = converter::to_ical(resolved, false);
     Ok(ical)
 }
 

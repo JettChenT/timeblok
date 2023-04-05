@@ -874,6 +874,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "md-5"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6365506850d44bff6e2fbcb5176cf63650e48bd45ef2fe2665ae1570e0f4b9ca"
+dependencies = [
+ "digest",
+]
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1405,7 +1414,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1420,6 +1429,7 @@ dependencies = [
  "pest",
  "pest_derive",
  "reqwest",
+ "uuid",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -1427,7 +1437,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok-cli"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1440,7 +1450,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok-js"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "console_error_panic_hook",
  "timeblok",
@@ -1597,6 +1607,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1674845326ee10d37ca60470760d4288a6f80f304007d92e5c53bab78c9cfd79"
 dependencies = [
  "getrandom",
+ "md-5",
+ "wasm-bindgen",
 ]
 
 [[package]]
