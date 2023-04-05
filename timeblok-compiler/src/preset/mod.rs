@@ -1,3 +1,4 @@
+#[cfg(not(target_family = "wasm"))]
 mod workalendar;
 
 use std::fs::File;
@@ -14,9 +15,11 @@ use crate::resolver::{resolve_date, ResolverAction};
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Weekday};
 use icalendar::Calendar;
+#[cfg(not(target_family = "wasm"))]
 use crate::utils::{download_file, get_dir};
 use std::str::FromStr;
 
+#[cfg(not(target_family = "wasm"))]
 use self::workalendar::{get_holiday, get_workdays};
 
 impl ExactDate {
@@ -25,6 +28,7 @@ impl ExactDate {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&Environment, &[Value]) -> Result<CommandRes>>) -> Result<()> {
     env.set(
         name,
@@ -36,6 +40,7 @@ fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&E
     )
 }
 
+#[cfg(not(target_family = "wasm"))]
 fn insert_region(env: &mut Environment) -> Result<()> {
     env.set(
         "holidays",
@@ -87,6 +92,7 @@ fn insert_region(env: &mut Environment) -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_family = "wasm"))]
 fn insert_commands(env: &mut Environment) -> Result<()> {
     env.set(
         "print",
@@ -232,10 +238,19 @@ fn insert_weekdays(env: &mut Environment) -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_family = "wasm"))]
 pub fn insert_preset(env: &mut Environment) -> Result<()> {
     // inserting weekdays
     insert_weekdays(env)?;
     insert_commands(env)?;
     insert_region(env)?;
+    Ok(())
+}
+
+
+#[cfg(target_family = "wasm")]
+pub fn insert_preset(env: &mut Environment) -> Result<()> {
+    // inserting weekdays
+    insert_weekdays(env)?;
     Ok(())
 }

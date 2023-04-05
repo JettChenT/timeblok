@@ -1,3 +1,4 @@
+#[cfg(not(target_family = "wasm"))]
 use anyhow::{anyhow, Result};
 
 #[cfg(not(target_family = "wasm"))]

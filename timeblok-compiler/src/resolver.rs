@@ -1,7 +1,6 @@
 use crate::environment::Environment;
 use crate::ir::NumVal::{Number, Unsure};
 use crate::ir::*;
-#[cfg(not(target_family = "wasm"))]
 use crate::preset::insert_preset;
 use anyhow::{anyhow, Result};
 use chrono::Local;
@@ -37,7 +36,6 @@ pub fn resolve(records: Vec<Record>, base_t: ExactDateTime) -> Vec<ExactRecord> 
         )
     };
 
-    #[cfg(not(target_family = "wasm"))]
     insert_preset(&mut base).unwrap();
 
     let mut resolved = vec![];

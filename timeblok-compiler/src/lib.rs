@@ -13,7 +13,6 @@ mod importer;
 pub mod ir;
 mod output;
 mod parser;
-#[cfg(not(target_family = "wasm"))]
 mod preset;
 mod resolver;
 mod utils;
