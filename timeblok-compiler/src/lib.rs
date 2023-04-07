@@ -9,7 +9,7 @@ extern crate core;
 
 mod converter;
 mod environment;
-mod importer;
+pub mod importer;
 pub mod ir;
 mod output;
 mod parser;

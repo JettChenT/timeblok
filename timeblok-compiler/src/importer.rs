@@ -87,10 +87,8 @@ pub fn import_ics(url: &String) -> Result<Calendar>{
 }
 
 #[cfg(target_family = "wasm")]
-pub fn import_ics(url: &String) -> Result<Calendar>{
-    let mut contents = String::new();
-    File::open(PathBuf::from_str(url.as_str())?)?.read_to_string(&mut contents)?;
-    match Calendar::from_str(&contents) {
+pub fn import_ics(source: &String) -> Result<Calendar>{
+    match Calendar::from_str(source) {
         Ok(cal) => Ok(cal),
         Err(e) => Err(anyhow!(e))
     }
