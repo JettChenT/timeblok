@@ -1283,6 +1283,20 @@ name = "serde"
 version = "1.0.159"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c04e8343c3daeec41f58990b9d77068df31209f2af111e059e9fe9646693065"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.159"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c614d17805b093df4b147b51339e7e44bf05ef59fba1e45d83500bcfb4d8585"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.11",
+]
 
 [[package]]
 name = "serde_json"
@@ -1420,7 +1434,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1435,6 +1449,7 @@ dependencies = [
  "pest",
  "pest_derive",
  "reqwest",
+ "serde",
  "uuid",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -1443,7 +1458,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok-cli"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1456,12 +1471,13 @@ dependencies = [
 
 [[package]]
 name = "timeblok-js"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "console_error_panic_hook",
  "timeblok",
  "wasm-bindgen",
  "wasm-bindgen-test",
+ "web-sys",
 ]
 
 [[package]]
