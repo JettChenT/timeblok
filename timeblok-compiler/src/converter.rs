@@ -49,6 +49,13 @@ impl ExactDateTime {
                 }
             }
             TimeZoneChoice::Utc => Ok(Utc.from_utc_datetime(&baset)),
+            TimeZoneChoice::Offset(o) => {
+                let t = o.from_local_datetime(&baset);
+                match t {
+                    Single(t) => Ok(t.with_timezone(&Utc)),
+                    _ => Err(anyhow!("Error processing DateTime: {}", baset)),
+                }
+            }
         }
     }
 

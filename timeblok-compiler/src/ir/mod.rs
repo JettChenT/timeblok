@@ -61,6 +61,7 @@ pub struct ExactTimeRange {
 pub enum TimeZoneChoice {
     Local,
     Utc,
+    Offset(chrono::offset::FixedOffset)
 }
 
 #[derive(Default, Debug, Clone)]
