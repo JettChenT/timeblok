@@ -53,4 +53,6 @@ pub fn test_compile() {
         let resolved = ics_to_records(&import_ics(icsdat).unwrap());
         assert!(resolved.len()==4);
     }
+    let res = compile_with_basedate("/set d {mon or tue}\n2023-4-\n{d}\n10am do stuff", 2023, 4, 7);
+    assert!(res.is_some());
 }

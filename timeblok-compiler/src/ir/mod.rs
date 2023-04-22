@@ -1,6 +1,7 @@
 use crate::ir::filter::{Filter, BDF};
 use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, NaiveWeek, Timelike};
-use icalendar::{CalendarDateTime, DatePerhapsTime};
+use icalendar::{CalendarDateTime, DatePerhapsTime, Component};
+use anyhow::Result;
 
 use self::{command::CommandCall, ident::Ident};
 
@@ -364,6 +365,24 @@ impl Date {
             month: Number(month as i64),
             day: Number(day as i64),
         }
+    }
+}
+
+pub struct Todo{
+    name: String,
+    due: Option<ExactDate>,
+    status: icalendar::TodoStatus
+}
+
+impl Todo{
+    pub fn to_chrono(&self) -> Result<icalendar::Todo>{
+        let mut tod = icalendar::Todo::new();
+        tod.summary(&self.name);
+        if let Some(due) = self.due {
+            tod.due(due.to_chrono()?);
+        }
+        tod.status(self.status);
+        Ok(tod)
     }
 }
 

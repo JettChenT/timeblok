@@ -119,6 +119,7 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
         } else {
             None
         };
+        
         if let ExactRecord::Event(event) = record {
             match event.to_icalevent(key) {
                 Ok(calevent) => {
