@@ -109,6 +109,7 @@ impl ExactEvent {
         }
         Ok(calevent)
     }
+
 }
 
 pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
@@ -133,6 +134,17 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
     }
     calendar = calendar.done();
     calendar.to_string()
+}
+
+pub fn to_csv(records: Vec<ExactRecord>) -> Result<String> {
+    let mut wtr = csv::Writer::from_writer(vec![]);
+    wtr.write_record(["timerange", "event"])?;
+    for (i,record) in records.iter().enumerate() {
+        if let ExactRecord::Event(event) = record {
+            wtr.write_record([event.range.to_string().as_str(), event.name.as_str()])?;
+        }
+    }
+    Ok(String::from_utf8(wtr.into_inner()?)?)
 }
 
 // test
