@@ -14,7 +14,7 @@ pub struct Command {
     pub name: String,
     // An arity of 0 allows for an arbitrary amount of arguments
     pub arity: usize,
-    pub func: Rc<dyn Fn(&Environment, &[Value]) -> Result<CommandRes>>,
+    pub func: Rc<dyn Fn(&Environment, &CommandCall) -> Result<CommandRes>>,
 }
 
 impl Debug for Command {
@@ -24,16 +24,16 @@ impl Debug for Command {
 }
 
 impl Command {
-    pub fn run(&self, env: &Environment, args: &Vec<Value>) -> Result<CommandRes> {
-        if self.arity>0 && args.len() != self.arity {
+    pub fn run(&self, env: &Environment, call: &CommandCall) -> Result<CommandRes> {
+        if self.arity>0 && call.args.len() != self.arity {
             return Err(anyhow!(
                 "{} requires {} arguments, got {}",
                 self.name,
                 self.arity,
-                args.len()
+                call.args.len()
             ));
         }
-        (self.func)(env, args)
+        (self.func)(env, &call)
     }
 }
 
@@ -41,6 +41,7 @@ impl Command {
 pub struct CommandCall {
     pub command: String,
     pub args: Vec<Value>,
+    pub plain: String // Preserve the original argument string for custom parsing/error messages
 }
 
 impl CommandCall {
@@ -48,7 +49,7 @@ impl CommandCall {
         let r = env.get(&self.command);
         let res = r.ok_or_else(|| anyhow!("{} is not defined", self.command))?;
         if let IdentData::Command(cmd) = res {
-            cmd.run(env, &self.args)
+            cmd.run(env, self)
         } else {
             Err(anyhow!("{} is not a command", self.command))
         }

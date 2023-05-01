@@ -102,15 +102,19 @@ fn parse_flex_events(pair: Pair<Rule>) -> Result<FlexEvents> {
 fn parse_command(pair: Pair<Rule>) -> Result<CommandCall> {
     let mut pairs = pair.into_inner();
     let command = get_next!(pairs);
+    let mut argpairs = get_next!(pairs).into_inner();
+    let s = argpairs.as_str();
     let mut args = vec![];
-    while pairs.peek().is_some() {
-        let nxt = get_next!(pairs);
+    while argpairs.peek().is_some() {
+        let nxt = get_next!(argpairs);
         let res = match nxt.as_rule() {
             Rule::FILTER => Value::NumFilter(parse_num_filter(nxt)?),
             Rule::DATE_FILTER => Value::DateFilter(parse_date_filter(nxt)?),
             Rule::IDENT => Value::Ident(parse_ident(nxt)?),
             Rule::NUM_FIELD => Value::Num(parse_numval(nxt)?),
             Rule::EOI => {break;}
+            Rule::CARG => Value::String(nxt.as_str().to_string()),
+            Rule::STRING => Value::String(nxt.as_str().to_string()),
             r => {
                 eprintln!("unexpected rule: {:?}", r);
                 unreachable!()
@@ -121,6 +125,7 @@ fn parse_command(pair: Pair<Rule>) -> Result<CommandCall> {
     Ok(CommandCall {
         command: command.as_str().to_string(),
         args,
+        plain: s.to_string(),
     })
 }
 
