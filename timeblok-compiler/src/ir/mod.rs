@@ -158,6 +158,7 @@ pub enum Record {
 pub enum ExactRecord {
     Event(ExactEvent),
     Note(String),
+    Todo(Todo)
 }
 
 #[derive(Debug)]
@@ -178,6 +179,7 @@ pub enum Value {
     NumFilter(BDF<NumVal>),
     Date(Date),
     Ident(Ident),
+    String(String),
 }
 
 impl DateTime {
@@ -369,6 +371,7 @@ impl Date {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Todo{
     name: String,
     due: Option<ExactDate>,
@@ -376,7 +379,7 @@ pub struct Todo{
 }
 
 impl Todo{
-    pub fn to_chrono(&self) -> Result<icalendar::Todo>{
+    pub fn to_ical(&self) -> Result<icalendar::Todo>{
         let mut tod = icalendar::Todo::new();
         tod.summary(&self.name);
         if let Some(due) = self.due {
@@ -384,6 +387,14 @@ impl Todo{
         }
         tod.status(self.status);
         Ok(tod)
+    }
+
+    pub fn from_string(s: String) -> Result<Self>{
+        Ok(Self{
+            name: s,
+            due: None,
+            status: icalendar::TodoStatus::NeedsAction
+        })
     }
 }
 

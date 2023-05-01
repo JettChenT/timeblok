@@ -7,7 +7,7 @@ use std::rc::Rc;
 
 use crate::environment::Environment;
 use crate::importer::{ics_to_records, import_ics, SetFilter};
-use crate::ir::command::{Command, CommandRes};
+use crate::ir::command::{Command, CommandRes, CommandCall};
 use crate::ir::filter::ExcludeFilt;
 use crate::ir::ident::{DynFilter, IdentData};
 use crate::ir::{Date, ExactDate, Value};
@@ -28,7 +28,7 @@ impl ExactDate {
     }
 }
 
-fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&Environment, &[Value]) -> Result<CommandRes>>) -> Result<()> {
+fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&Environment, &CommandCall) -> Result<CommandRes>>) -> Result<()> {
     env.set(
         name,
         IdentData::Command(Command{
@@ -46,8 +46,8 @@ fn insert_region(env: &mut Environment) -> Result<()> {
         IdentData::Command(Command {
             name: "holidays".to_string(),
             arity: 1,
-            func: Rc::new(|env: &Environment, args: &[Value]| {
-                if let Value::Ident(ident) = &args[0] {
+            func: Rc::new(|env: &Environment, x: &CommandCall| {
+                if let Value::Ident(ident) = &x.args[0] {
                     let cal = get_holiday(&ident.name, false)?;
                     let filt = SetFilter::from_ics(&cal);
                     env.set(
@@ -67,8 +67,8 @@ fn insert_region(env: &mut Environment) -> Result<()> {
         IdentData::Command(Command {
             name: "region".to_string(),
             arity: 1,
-            func: Rc::new(|env: &Environment, args: &[Value]| {
-                if let Value::Ident(ident) = &args[0] {
+            func: Rc::new(|env: &Environment, x: &CommandCall| {
+                if let Value::Ident(ident) = &x.args[0] {
                     let cal = get_workdays(&ident.name, false)?;
                     let filt = SetFilter::from_naive_dates(cal);
                     env.set(
@@ -91,15 +91,18 @@ fn insert_region(env: &mut Environment) -> Result<()> {
     Ok(())
 }
 
+
 #[cfg(not(target_family = "wasm"))]
 fn insert_commands(env: &mut Environment) -> Result<()> {
+    use crate::ir::Todo;
+
     env.set(
         "print",
         IdentData::Command(Command {
             name: "print".to_string(),
             arity: 1,
-            func: Rc::new(|env: &Environment, args: &[Value]| {
-                if let Value::Ident(ident) = &args[0] {
+            func: Rc::new(|env: &Environment, x: &CommandCall| {
+                if let Value::Ident(ident) = &x.args[0] {
                     if let Some(dat) = env.get(&ident.name) {
                         println!("{} : {:?}", &ident.name, dat);
                         Ok(None)
@@ -117,9 +120,9 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
         IdentData::Command(Command {
             name: "set".to_string(),
             arity: 2,
-            func: Rc::new(|env: &Environment, args: &[Value]| {
-                if let Value::Ident(ident) = &args[0] {
-                    env.set(&ident.name, IdentData::Value(args[1].clone()))?;
+            func: Rc::new(|env: &Environment, x: &CommandCall| {
+                if let Value::Ident(ident) = &x.args[0] {
+                    env.set(&ident.name, IdentData::Value(x.args[1].clone()))?;
                     Ok(None)
                 } else {
                     Err(anyhow!("First argument for /set must be an identity."))
@@ -132,8 +135,8 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
         IdentData::Command(Command {
             name: "del".to_string(),
             arity: 1,
-            func: Rc::new(|env: &Environment, args: &[Value]| {
-                if let Value::Ident(ident) = &args[0] {
+            func: Rc::new(|env: &Environment, x: &CommandCall| {
+                if let Value::Ident(ident) = &x.args[0] {
                     env.del(&ident.name)?;
                     Ok(None)
                 } else {
@@ -143,10 +146,10 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
         }),
     )?;
     insert_command(env, "import", 0,
-        Rc::new(|env: &Environment, args: &[Value]| {
-            match args.len() {
+        Rc::new(|env: &Environment, x: &CommandCall| {
+            match x.args.len() {
                 1 => {
-                    if let Value::Ident(ident) = &args[0] {
+                    if let Value::Ident(ident) = &x.args[0] {
                         let url = &ident.name;
                         if url.ends_with("ics") {
                             return match import_ics(url) {
@@ -163,7 +166,7 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
                     }
                 }
                 2 => {
-                    if let (Value::Ident(ident), Value::Ident(name)) = (&args[0], &args[1]) {
+                    if let (Value::Ident(ident), Value::Ident(name)) = (&x.args[0], &x.args[1]) {
                         let url = &ident.name;
                         if url.ends_with("ics") {
                             //     download url from internet and add ics filter
@@ -186,6 +189,12 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
             }
         })
     )?;
+
+    // todo function
+    insert_command(env, "t", 0, Rc::new(|env: &Environment, x: &CommandCall|{
+        Ok(Some(vec![ResolverAction::InsertTodo(Todo::from_string(x.plain.clone())?)]))
+    }));
+
     Ok(())
 }
 

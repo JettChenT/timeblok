@@ -8,12 +8,14 @@ use chrono::{prelude as cr, Datelike, Timelike};
 use std::rc::Rc;
 use std::time::SystemTime;
 use crate::ir::ident::{Ident, IdentData};
+use crate::ir::Todo;
 
 // TODO: Change all resolve to Result<> based
 
 pub enum ResolverAction {
     Set(Ident, IdentData),
     InsertRecord(ExactRecord),
+    InsertTodo(Todo),
     InsertRecords(Vec<ExactRecord>)
 }
 
@@ -72,6 +74,7 @@ pub fn resolve(records: Vec<Record>, base_t: ExactDateTime) -> Vec<ExactRecord> 
                                 ResolverAction::Set(ident, data) => {baseref.as_ref().set(ident.name.as_str(), data).unwrap();},
                                 ResolverAction::InsertRecord(rec) => {resolved.push(rec);},
                                 ResolverAction::InsertRecords(recs) => {resolved.extend(recs);}
+                                ResolverAction::InsertTodo(t) => {resolved.push(ExactRecord::Todo(t));}
                             }
                         }
                     }

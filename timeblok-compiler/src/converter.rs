@@ -121,16 +121,30 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
             None
         };
         
-        if let ExactRecord::Event(event) = record {
-            match event.to_icalevent(key) {
-                Ok(calevent) => {
-                    calendar.push(calevent);
+        match record {
+            ExactRecord::Event(event) => {
+                match event.to_icalevent(key) {
+                    Ok(calevent) => {
+                        calendar.push(calevent);
+                    }
+                    Err(e) => {
+                        eprintln!("Error processing event: {}", e);
+                    }
                 }
-                Err(e) => {
-                    eprintln!("Error processing event: {}", e);
+            }
+            ExactRecord::Note(_) => {}
+            ExactRecord::Todo(t) => {
+                match t.to_ical() {
+                    Ok(caltodo) => {
+                        calendar.push(caltodo);
+                    }
+                    Err(e) => {
+                        eprintln!("Error processing todo: {}", e);
+                    }
                 }
             }
         }
+
     }
     calendar = calendar.done();
     calendar.to_string()
