@@ -1,6 +1,7 @@
 [package]
 name = "timeblok-js"
 description = "WASM bindings for Timeblok"
+publish = false
 
 edition.workspace = true
 license.workspace = true
