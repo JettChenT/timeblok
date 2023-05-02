@@ -1,12 +1,13 @@
 use anyhow::{anyhow, Result};
+use clap::ValueEnum;
 use directories::{BaseDirs, ProjectDirs};
 
 use std::fs;
 use std::io::Write;
 
-use timeblok::{tb_to_records, records_to_resolved, resolved_to_ical, ir::ExactDateTime};
+use timeblok::{tb_to_records, records_to_resolved, resolved_to_ical, ir::ExactDateTime, resolved_to_csv};
 
-use crate::args::{parse, Args};
+use crate::args::{parse, Args, OutputTypes};
 
 pub fn main() {
     let args = parse();
@@ -57,7 +58,21 @@ fn try_main(args: Args) -> Result<()> {
         return Ok(());
     }
     let resolved = records_to_resolved(records, ExactDateTime::from_system_time(created))?;
-    let converted = resolved_to_ical(resolved)?;
+    let ext = match &args.format{
+        Some(s) => s.to_owned(),
+        None => {
+            if let Some(path) = &args.outfile{
+                let split: Vec<&str> = path.split(".").collect();
+                let tmp = split.last().unwrap();
+                OutputTypes::from_str(tmp, true)
+                    .unwrap_or(OutputTypes::Ics)
+            }else{OutputTypes::Ics}
+        }
+    };
+    let converted = match ext {
+        OutputTypes::Csv => resolved_to_csv(resolved)?,
+        OutputTypes::Ics => resolved_to_ical(resolved)?,
+    };
     match &args.outfile {
         Some(path) => {
             let mut file = fs::File::create(path)?;
