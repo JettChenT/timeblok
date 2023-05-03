@@ -39,6 +39,19 @@ fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&E
     )
 }
 
+fn insert_timezone(env: &mut Environment) -> Result<()> {
+    let fnc = Rc::new(|env: &Environment, x: &CommandCall| {
+        if let Ok(tz) = dateparser::timezone::parse(x.plain.as_str()){
+            Ok(Some(vec![ResolverAction::SetTimeZone(
+                crate::ir::TimeZoneChoice::Offset(tz))
+            ]))
+        }else{Ok(None)}
+    });
+    insert_command(env, "timezone", 0, fnc.clone())?;
+    insert_command(env, "tz", 0, fnc)?;
+    Ok(())
+}
+
 #[cfg(not(target_family = "wasm"))]
 fn insert_region(env: &mut Environment) -> Result<()> {
     env.set(
@@ -306,6 +319,7 @@ pub fn insert_preset(env: &mut Environment) -> Result<()> {
     insert_weekdays(env)?;
     insert_commands(env)?;
     insert_region(env)?;
+    insert_timezone(env)?;
     Ok(())
 }
 
@@ -315,5 +329,6 @@ pub fn insert_preset(env: &mut Environment) -> Result<()> {
     // inserting weekdays
     insert_weekdays(env)?;
     insert_commands(env)?;
+    insert_timezone(env)?;
     Ok(())
 }

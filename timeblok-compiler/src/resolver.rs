@@ -14,6 +14,7 @@ use crate::ir::Todo;
 
 pub enum ResolverAction {
     Set(Ident, IdentData),
+    SetTimeZone(TimeZoneChoice),
     InsertRecord(ExactRecord),
     InsertTodo(Todo),
     InsertRecords(Vec<ExactRecord>)
@@ -75,6 +76,16 @@ pub fn resolve(records: Vec<Record>, base_t: ExactDateTime) -> Vec<ExactRecord> 
                                 ResolverAction::InsertRecord(rec) => {resolved.push(rec);},
                                 ResolverAction::InsertRecords(recs) => {resolved.extend(recs);}
                                 ResolverAction::InsertTodo(t) => {resolved.push(ExactRecord::Todo(t));}
+                                ResolverAction::SetTimeZone(tz) => {
+                                    let nbase = Environment::new(
+                                        ExactDateTime {
+                                            tz,
+                                            ..baseref.as_ref().date_time
+                                        },
+                                        baseref.as_ref().current.clone(),
+                                        Some(Rc::clone(&baseref)));
+                                    baseref = Rc::new(nbase);
+                                }
                             }
                         }
                     }
