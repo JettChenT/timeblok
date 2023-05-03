@@ -134,7 +134,7 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
             }
             ExactRecord::Note(_) => {}
             ExactRecord::Todo(t) => {
-                match t.to_ical() {
+                match t.to_ical(key) {
                     Ok(caltodo) => {
                         calendar.push(caltodo);
                     }

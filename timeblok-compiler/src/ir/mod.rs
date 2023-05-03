@@ -379,13 +379,16 @@ pub struct Todo{
 }
 
 impl Todo{
-    pub fn to_ical(&self) -> Result<icalendar::Todo>{
+    pub fn to_ical(&self, key: Option<String>) -> Result<icalendar::Todo>{
         let mut tod = icalendar::Todo::new();
         tod.summary(&self.name);
         if let Some(due) = self.due {
             tod.due(due.to_chrono()?);
         }
         tod.status(self.status);
+        if let Some(k) = key {
+            tod.uid(&k.as_str());
+        }
         Ok(tod)
     }
 
