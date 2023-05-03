@@ -1,0 +1,24 @@
+---
+source: timeblok-compiler/src/tests/tests.rs
+expression: "compile_deterministic(r###\"2023-4-4\n10am wake up and eat breakfast\n11am go to work\n    \"###,\n        ExactDateTime::from_ymd_hms(2023, 1, 1, 0, 0, 0).clone()).unwrap()"
+---
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:ICALENDAR-RS
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+DTSTAMP:20230503T152958Z
+DTEND:20230404T023000Z
+DTSTART:20230404T020000Z
+SUMMARY:wake up and eat breakfast
+UID:c8e1eb22-a627-3daa-884c-2205cf78d075
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20230503T152958Z
+DTEND:20230404T033000Z
+DTSTART:20230404T030000Z
+SUMMARY:go to work
+UID:9311744c-3746-3502-84c9-d06e8b5ea2d6
+END:VEVENT
+END:VCALENDAR
+

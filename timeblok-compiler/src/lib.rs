@@ -16,6 +16,8 @@ mod parser;
 mod preset;
 mod resolver;
 mod utils;
+#[cfg(test)]
+mod tests;
 
 use ir::ExactDateTime;
 use parser::{BlokParser, Rule};
@@ -40,6 +42,11 @@ pub fn resolved_to_ical(resolved: Vec<ir::ExactRecord>) -> Result<String> {
     Ok(ical)
 }
 
+pub fn resolved_to_ical_deterministic(resolved: Vec<ir::ExactRecord>) -> Result<String> {
+    let ical = converter::to_ical(resolved, true);
+    Ok(ical)
+}
+
 pub fn resolved_to_csv(resolved: Vec<ir::ExactRecord>) -> Result<String> {
     let csv = converter::to_csv(resolved)?;
     Ok(csv)
@@ -49,5 +56,12 @@ pub fn compile(source: &str, base_time: ExactDateTime) -> Result<String> {
     let records = tb_to_records(&source.to_string())?;
     let resolved = records_to_resolved(records, base_time)?;
     let ical = resolved_to_ical(resolved)?;
+    Ok(ical)
+}
+
+pub fn compile_deterministic(source: &str, base_time: ExactDateTime) -> Result<String> {
+    let records = tb_to_records(&source.to_string())?;
+    let resolved = records_to_resolved(records, base_time)?;
+    let ical = resolved_to_ical_deterministic(resolved)?;
     Ok(ical)
 }
