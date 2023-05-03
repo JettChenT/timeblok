@@ -18,7 +18,7 @@ path = "src/main.rs"
 [target.'cfg(not(target_family="wasm"))'.dependencies]
 clap = { version = "4.0.32", features = ["derive"] }
 edit = "0.1.4"
-timeblok = {path="..", package="timeblok", version= "0.4.0" }
+timeblok = {path="..", package="timeblok", version= "0.4.1" }
 open = "4.0.1"
 anyhow = "1.0.70"
 directories = "5.0.0"
