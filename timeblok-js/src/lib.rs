@@ -35,6 +35,8 @@ pub fn compile_with_basedate(source: &str, year: i32, month: u32, day: u32) -> O
 
 #[wasm_bindgen]
 pub fn compile_verbose(source: &str, year: i32, month: u32, day: u32) -> Option<String> {
+    log!("VERSION:");
+    log!(env!("CARGO_PKG_VERSION"));
     let records = timeblok::tb_to_records(&source.to_string()).ok()?;
     log_debug!(records);
     let resolved = timeblok::records_to_resolved(records, ExactDateTime::from_ymd_hms(year, month, day,0,0,0)).ok()?;
