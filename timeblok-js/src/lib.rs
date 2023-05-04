@@ -45,6 +45,7 @@ pub fn compile_verbose(source: &str, year: i32, month: u32, day: u32) -> Option<
     Some(ics)
 }
 
+wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[wasm_bindgen_test]
 pub fn test_compile() {
     use timeblok::importer::*;
