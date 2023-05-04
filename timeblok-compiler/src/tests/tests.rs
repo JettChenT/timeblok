@@ -12,9 +12,20 @@ macro_rules! assert_compile_snapshot {
     };
 }
 
+
+#[cfg(not(target_family = "wasm"))]
 #[test]
 fn run_tests(){
     glob!("bloks/*.tb", |path| {
+        let input = fs::read_to_string(path).unwrap();
+        assert_compile_snapshot!(&input);
+    });
+}
+
+#[cfg(target_family = "wasm")]
+#[test]
+fn run_tests(){
+    glob!("wsm-bloks/*.tb", |path| {
         let input = fs::read_to_string(path).unwrap();
         assert_compile_snapshot!(&input);
     });
