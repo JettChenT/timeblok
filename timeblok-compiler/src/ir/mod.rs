@@ -1,5 +1,5 @@
 use crate::ir::filter::{Filter, BDF};
-use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, NaiveWeek, Timelike};
+use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, NaiveWeek, Timelike, Utc};
 use icalendar::{CalendarDateTime, DatePerhapsTime, Component};
 use anyhow::Result;
 
@@ -379,7 +379,7 @@ pub struct Todo{
 }
 
 impl Todo{
-    pub fn to_ical(&self, key: Option<String>) -> Result<icalendar::Todo>{
+    pub fn to_ical(&self, key: Option<String>, tsmp:Option<chrono::DateTime<Utc>>) -> Result<icalendar::Todo>{
         let mut tod = icalendar::Todo::new();
         tod.summary(&self.name);
         if let Some(due) = self.due {
@@ -388,6 +388,9 @@ impl Todo{
         tod.status(self.status);
         if let Some(k) = key {
             tod.uid(&k.as_str());
+        }
+        if let Some(dt)=tsmp{
+            tod.timestamp(dt);
         }
         Ok(tod)
     }

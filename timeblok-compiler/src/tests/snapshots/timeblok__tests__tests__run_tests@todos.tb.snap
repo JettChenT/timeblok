@@ -1,0 +1,23 @@
+---
+source: timeblok-compiler/src/tests/tests.rs
+expression: "compile_deterministic(&input,\n        ExactDateTime::from_ymd_hms(2023, 1, 1, 0, 0, 0).clone()).unwrap()"
+input_file: timeblok-compiler/src/tests/bloks/todos.tb
+---
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:ICALENDAR-RS
+CALSCALE:GREGORIAN
+BEGIN:VTODO
+DTSTAMP:20221231T160000Z
+STATUS:NEEDS-ACTION
+SUMMARY:I wanna do this
+UID:0
+END:VTODO
+BEGIN:VTODO
+DTSTAMP:20221231T160000Z
+STATUS:NEEDS-ACTION
+SUMMARY:I wanna do that
+UID:1
+END:VTODO
+END:VCALENDAR
+

@@ -1,3 +1,5 @@
+use std::char::CharTryFromError;
+
 use crate::ir::{
     ExactDate, ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, TimeZoneChoice,
 };
@@ -87,7 +89,7 @@ impl ExactDateTime {
 }
 
 impl ExactEvent {
-    fn to_icalevent(&self, key: Option<String>) -> Result<ical::Event> {
+    fn to_icalevent(&self, key: Option<String>, tsmp: Option<chrono::DateTime<Utc>>) -> Result<ical::Event> {
         let mut calevent = ical::Event::new();
         calevent.summary(self.name.as_str());
         if let Some(notes) = self.notes.as_ref() {
@@ -95,6 +97,9 @@ impl ExactEvent {
         }
         if let Some(s) = key {
             calevent.uid(Uuid::new_v3(&Uuid::NAMESPACE_URL, s.as_bytes()).to_string().as_str());
+        }
+        if let Some(tsmp)=tsmp{
+            calevent.timestamp(tsmp);
         }
         match &self.range {
             ExactRange::TimeRange(range) => {
@@ -109,13 +114,12 @@ impl ExactEvent {
         }
         Ok(calevent)
     }
-
 }
 
-pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
+pub fn to_ical(records: Vec<ExactRecord>, deterministic_tsmp: Option<chrono::DateTime<Utc>>) -> String {
     let mut calendar = ical::Calendar::new();
     for (i,record) in records.iter().enumerate() {
-        let key = if deterministic {
+        let key = if deterministic_tsmp.is_some() {
             Some(i.to_string())
         } else {
             None
@@ -123,7 +127,7 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
         
         match record {
             ExactRecord::Event(event) => {
-                match event.to_icalevent(key) {
+                match event.to_icalevent(key, deterministic_tsmp) {
                     Ok(calevent) => {
                         calendar.push(calevent);
                     }
@@ -134,7 +138,7 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
             }
             ExactRecord::Note(_) => {}
             ExactRecord::Todo(t) => {
-                match t.to_ical(key) {
+                match t.to_ical(key, deterministic_tsmp) {
                     Ok(caltodo) => {
                         calendar.push(caltodo);
                     }
@@ -144,7 +148,6 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic: bool) -> String {
                 }
             }
         }
-
     }
     calendar = calendar.done();
     calendar.to_string()
