@@ -1,5 +1,6 @@
 use crate::{compile_deterministic, ir::ExactDateTime};
-use insta::assert_snapshot;
+use insta::{assert_snapshot, glob};
+use std::fs;
 
 macro_rules! assert_compile_snapshot {
     ($input:expr, $base_time:expr) => {
@@ -12,26 +13,9 @@ macro_rules! assert_compile_snapshot {
 }
 
 #[test]
-fn test_sanity() {
-    assert_compile_snapshot!(r###"2023-4-4
-10am wake up and eat breakfast
-11am go to work
-    "###);
-}
-
-#[test]
-fn test_filters(){
-    assert_compile_snapshot!(r###"2023--
-{mon or tue or thu}
-10am wakeup
-{sat}
-20:00 wekly review
-    "###);
-
-    assert_compile_snapshot!(r###"2024--
-{workday}
-6am wake up
-{weekend}
-10pm sleep
-    "###);
+fn run_tests(){
+    glob!("bloks/*.tb", |path| {
+        let input = fs::read_to_string(path).unwrap();
+        assert_compile_snapshot!(&input);
+    });
 }
