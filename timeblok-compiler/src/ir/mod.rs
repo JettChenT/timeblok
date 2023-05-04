@@ -59,7 +59,7 @@ pub struct ExactTimeRange {
     pub end: ExactDateTime,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimeZoneChoice {
     Local,
     Utc,
@@ -373,9 +373,9 @@ impl Date {
 
 #[derive(Debug, Clone)]
 pub struct Todo{
-    name: String,
-    due: Option<ExactDate>,
-    status: icalendar::TodoStatus
+    pub name: String,
+    pub due: Option<ExactDate>,
+    pub status: icalendar::TodoStatus
 }
 
 impl Todo{

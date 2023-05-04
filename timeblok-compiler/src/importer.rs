@@ -11,7 +11,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use icalendar::{Calendar, Component};
-use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, ExactTimeRange};
+use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, ExactTimeRange, Todo};
 use anyhow::{Result, anyhow};
 use crate::utils::get_dir;
 #[cfg(not(target_family = "wasm"))]
@@ -120,10 +120,14 @@ pub fn ics_to_records(cal: &Calendar) -> Vec<ExactRecord>{
             records.push(ExactRecord::Event(ExactEvent{
                 range,
                 name: event.get_summary().unwrap_or("").to_string(),
-                notes: match event.get_description() {
-                    Some(s) => Some(s.to_string()),
-                    None => None
-                }
+                notes: event.get_description().map(|s| s.to_string())
+            }))
+        }
+        if let Some(td) = c.as_todo(){
+            records.push(ExactRecord::Todo(Todo{
+                name: td.get_summary().unwrap_or("").to_string(),
+                due: None,
+                status: td.get_status().unwrap_or(icalendar::TodoStatus::NeedsAction),
             }))
         }
     }

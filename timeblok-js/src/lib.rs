@@ -1,4 +1,4 @@
-use timeblok::ir::ExactDateTime;
+use timeblok::ir::{ExactDateTime, Event, ExactRecord, ExactRange, TimeZoneChoice};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 mod utils;
@@ -43,11 +43,10 @@ pub fn compile_verbose(source: &str, year: i32, month: u32, day: u32) -> Option<
     Some(ics)
 }
 
-wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[wasm_bindgen_test]
 pub fn test_compile() {
     use timeblok::importer::*;
-    let res = compile_with_basedate("2023-4-\n{mon}\n10am do stuff", 2023, 4, 7);
+    let res = compile_with_basedate("/t do stuff\n2023-4-\n{mon}\n10am do stuff", 2023, 4, 7);
     assert!(res.is_some());
     if let Some(ref icsdat) = res {
         let resolved = ics_to_records(&import_ics(icsdat).unwrap());
@@ -55,9 +54,17 @@ pub fn test_compile() {
     }
     let res = compile_with_basedate("/set d {mon or tue}\n2023-4-\n{d}\n10am do stuff", 2023, 4, 7);
     assert!(res.is_some());
-}
-
-#[test]
-pub fn test_wasm(){
-
+    let res = compile_with_basedate("/tz pdt\n2023-5-3\n10am do stuff", 2023, 4, 8);
+    if let Some(ref icsdat) = res {
+        let resolved = ics_to_records(&import_ics(icsdat).unwrap());
+        assert!(resolved.len()==1);
+        let chr = resolved.get(0).unwrap();
+        if let ExactRecord::Event(ev) = chr{
+            if let ExactRange::TimeRange(tr) = &ev.range{
+                let ch = &tr.start;
+                assert!(ch.tz==TimeZoneChoice::Utc);
+                assert!(ch.time.hour==17);
+            }
+        }
+    }
 }
