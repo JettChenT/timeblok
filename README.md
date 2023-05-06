@@ -150,3 +150,5 @@ Currently available commands include:
 - `/region [region_name]`: sets the region for resolving workdays based on the amazing [workalendar](https://github.com/workalendar/workalendar) project. For a reference of the names of all supported regions, see [here](https://github.com/JettChenT/workalendar-hub/tree/main/workingdays). Note: currently only [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) and [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) codes(eg. CN, US) are supported, but we will support more flexible region names in the future.
 - `/set [key] [value]`: sets a name in the namespace to a value. This is useful for for creating custom filters. eg. `/set semester {-2-17~-6-30}`
 - `/print [key]`: prints the value of a name in the namespace. 
+- `/tz [timezone]` `/timezone [timezone]`: sets the timezone for the output ics file. eg. `/tz utc`
+- `/t [todo]`: creates a todo event. eg. `/t buy milk`
