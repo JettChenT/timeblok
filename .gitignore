@@ -17,3 +17,5 @@ target/
 
 .env
 .history
+
+__pycache__

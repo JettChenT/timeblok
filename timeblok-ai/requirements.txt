@@ -1,3 +1,5 @@
-openai
-rich
-python-dotenv
+openai==0.27.4
+rich==13.3.1
+python-dotenv==1.0.0
+fastapi==0.95.1
+pydantic==1.10.5

@@ -9,15 +9,16 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich import print
 
-dotenv.load_dotenv()
+def set_openai_api_env():
+    dotenv.load_dotenv()
+    if os.getenv("OPENAI_API_BASE") is not None:
+        openai.api_base = os.getenv("OPENAI_API_BASE")
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# set api_base to environ OPENAI_API_BASE when it exists
-if os.getenv("OPENAI_API_BASE") is not None:
-    openai.api_base = os.getenv("OPENAI_API_BASE")
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
-# variable to store the last valid timeblok program
-last_timeblok = None
+def set_openai_api(key, base=None):
+    openai.api_key = key
+    if base is not None:
+        openai.api_base = base
 
 def load_examples():
     # read all files in examples/folder
@@ -48,9 +49,6 @@ def load_prompts():
 def parse_results(markdown):
     code_blocks = re.findall("```(timeblok)\n(.*?)```", markdown, flags=re.DOTALL)
     if code_blocks:
-        # set the last_timeblok variable to the parsed timeblok
-        global last_timeblok
-        last_timeblok = code_blocks[0][1]
         return code_blocks[0][1]
     return None
 
@@ -65,10 +63,19 @@ def open_in_calendar(timeblok):
         except subprocess.CalledProcessError:
             print("Error: failed to open timeblok in calendar")
 
+def complete(messages):
+    completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+        )
+    content = completion.choices[0].message.content
+    return completion, content
 # create a basic input() based chatbot
-def main():
+def repl():
+    set_openai_api_env()
     messages = load_prompts()
     console = Console()
+    last_timeblok = None
     # Add help message in the beginning
     print("Welcome to Timeblok! \n Use '/n' to create a new timeblok, \n '/e' to edit the returned timeblok, \n '/s' to open the last returned timeblok, \n or '/q' to quit\n")
     while True:
@@ -93,15 +100,13 @@ def main():
             user_input = 'new:' + user_input
         
         messages.append({"role": "user", "content": user_input})
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-        )
-        content = completion.choices[0].message.content
+        completion, content = complete(messages)
         res = parse_results(content)
+        if res is not None:
+            last_timeblok = res
         markdown = Markdown(content)
         console.print(markdown)
         messages.append(completion.choices[0].message)
 
 if __name__ == "__main__":
-    main()
+    repl()
