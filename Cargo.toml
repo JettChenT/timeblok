@@ -2,7 +2,8 @@
 members = [
     "timeblok-compiler",
     "timeblok-compiler/cli",
-    "timeblok-js"
+    "timeblok-js",
+    "timeblok-py"
 ]
 
 [workspace.package]

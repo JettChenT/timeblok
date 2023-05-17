@@ -1,0 +1,23 @@
+[package]
+name = "timeblok-py"
+publish = false
+
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "timeblok_py"
+# "cdylib" is necessary to produce a shared library for Python to import from.
+crate-type = ["cdylib"]
+
+[dependencies]
+timeblok = {path="../timeblok-compiler", package="timeblok", version= "0.4.5" }
+
+[dependencies.pyo3]
+version = "0.18.0"
+# "abi3-py37" tells pyo3 (and maturin) to build using the stable ABI with minimum Python version 3.7
+features = ["abi3-py37"]
