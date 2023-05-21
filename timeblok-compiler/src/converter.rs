@@ -1,4 +1,4 @@
-use std::char::CharTryFromError;
+
 
 use crate::ir::{
     ExactDate, ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, TimeZoneChoice,
@@ -159,7 +159,7 @@ pub fn to_ical(records: Vec<ExactRecord>, deterministic_tsmp: Option<chrono::Dat
 pub fn to_csv(records: Vec<ExactRecord>) -> Result<String> {
     let mut wtr = csv::Writer::from_writer(vec![]);
     wtr.write_record(["timerange", "event"])?;
-    for (i,record) in records.iter().enumerate() {
+    for (_i,record) in records.iter().enumerate() {
         if let ExactRecord::Event(event) = record {
             wtr.write_record([event.range.to_string().as_str(), event.name.as_str()])?;
         }
@@ -171,7 +171,7 @@ pub fn to_csv(records: Vec<ExactRecord>) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDate;
+    
     use anyhow::Result;
 
     #[test]

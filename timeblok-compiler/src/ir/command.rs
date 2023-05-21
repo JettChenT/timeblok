@@ -33,7 +33,7 @@ impl Command {
                 call.args.len()
             ));
         }
-        (self.func)(env, &call)
+        (self.func)(env, call)
     }
 }
 

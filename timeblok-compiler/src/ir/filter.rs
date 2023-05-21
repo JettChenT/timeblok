@@ -140,6 +140,7 @@ impl Filter<Date> for FlexDate {
 
 // Add a unit test for filters
 // Thank you copilot
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::ir::Range;

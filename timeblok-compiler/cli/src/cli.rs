@@ -62,7 +62,7 @@ fn try_main(args: Args) -> Result<()> {
         Some(s) => s.to_owned(),
         None => {
             if let Some(path) = &args.outfile{
-                let split: Vec<&str> = path.split(".").collect();
+                let split: Vec<&str> = path.split('.').collect();
                 let tmp = split.last().unwrap();
                 OutputTypes::from_str(tmp, true)
                     .unwrap_or(OutputTypes::Ics)

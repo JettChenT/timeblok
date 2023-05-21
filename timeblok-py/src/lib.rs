@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
 use ::timeblok::compile;
-use ::timeblok::ir::{ExactDateTime, Event, ExactRecord, ExactRange, TimeZoneChoice};
+use ::timeblok::ir::{ExactDateTime};
 
 #[pyfunction]
 fn compile_with_basedate(source: &str, year: i32, month: u32, day: u32) -> Option<String> {

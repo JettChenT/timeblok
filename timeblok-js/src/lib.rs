@@ -1,4 +1,4 @@
-use timeblok::ir::{ExactDateTime, Event, ExactRecord, ExactRange, TimeZoneChoice};
+use timeblok::ir::{ExactDateTime, ExactRecord, ExactRange, TimeZoneChoice};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 mod utils;

@@ -9,7 +9,7 @@ use directories::ProjectDirs;
 use crate::ir::{ExactDateTime, ExactDate, ExactTime, TimeZoneChoice};
 use std::time::SystemTime;
 use chrono::Local;
-use chrono::{prelude as cr, Datelike, Timelike};
+use chrono::{prelude as cr, Datelike};
 
 #[cfg(target_family = "wasm")]
 use web_sys::{Request, RequestInit, RequestMode, Response};
@@ -29,7 +29,7 @@ pub fn download_file(filename:&str, dest:PathBuf, display_name: Option<&str>) ->
         return Err(anyhow!("Cannot download {}: {}", name, response.text()?));
     }
     // write contents of response to dest
-    fs::create_dir_all(&dest.parent().unwrap())?;
+    fs::create_dir_all(dest.parent().unwrap())?;
     File::create(&dest)?;
     fs::write(&dest, response.bytes()?)?;
     println!("downloaded {} to {}", name, &dest.display());

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 use std::str::FromStr;
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use icalendar::{Calendar, Component};
-use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTime, ExactTimeRange, Todo, ExactNotes};
+use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTimeRange, Todo, ExactNotes};
 use anyhow::{Result, anyhow};
 use crate::utils::get_dir;
 #[cfg(not(target_family = "wasm"))]
@@ -70,7 +70,7 @@ impl SetFilter {
 #[cfg(not(target_family = "wasm"))]
 pub fn import_ics(url: &String) -> Result<Calendar>{
     let contents = if url.starts_with("http"){
-        let loc = get_dir()?.join("ics").join(&url);
+        let loc = get_dir()?.join("ics").join(url);
         download_file(url, loc.clone(), None)?;
         let mut contents = String::new();
         File::open(loc)?.read_to_string(&mut contents)?;
@@ -120,13 +120,10 @@ pub fn ics_to_records(cal: &Calendar) -> Vec<ExactRecord>{
             records.push(ExactRecord::Event(ExactEvent{
                 range,
                 name: event.get_summary().unwrap_or("").to_string(),
-                notes: match event.get_description(){
-                    Some(s) => Some(ExactNotes{
+                notes: event.get_description().map(|s| ExactNotes{
                         description: s.to_string(),
                         properties: vec![], // TODO: add properties
-                    }),
-                    None => None
-                }
+                    })
             }))
         }
         if let Some(td) = c.as_todo(){

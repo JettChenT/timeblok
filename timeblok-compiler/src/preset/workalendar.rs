@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
 use chrono::NaiveDate;
 use icalendar::Calendar;
-use std::fs::create_dir_all;
 
-use std::path::PathBuf;
+
+
 use std::str::FromStr;
 use std::{fs, fs::File, io::Read};
 
@@ -79,7 +79,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_get_holiday() -> Result<()> {
-        let cal = get_holiday(&"US".to_string(), true)?;
+        let _cal = get_holiday(&"US".to_string(), true)?;
         Ok(())
     }
 

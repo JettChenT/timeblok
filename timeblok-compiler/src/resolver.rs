@@ -3,10 +3,10 @@ use crate::ir::NumVal::{Number, Unsure};
 use crate::ir::*;
 use crate::preset::insert_preset;
 use anyhow::{anyhow, Result};
-use chrono::Local;
-use chrono::{prelude as cr, Datelike, Timelike};
+
+use chrono::{Datelike, Timelike};
 use std::rc::Rc;
-use std::time::SystemTime;
+
 use crate::ir::ident::{Ident, IdentData};
 use crate::ir::Todo;
 
@@ -249,7 +249,7 @@ pub fn resolve_notes(notes: &Notes, base: &Environment) -> Result<ExactNotes> {
 pub fn resolve_property(property: &Property, base: &Environment) -> Result<ExactProperty> {
     let data: String = match &property.data {
         Value::Date(date) => {
-            let date = resolve_date(&date, base)?;
+            let date = resolve_date(date, base)?;
             // format date into YYYYMMDD
             format!("{}{:02}{:02}", date.year, date.month, date.day)
         },

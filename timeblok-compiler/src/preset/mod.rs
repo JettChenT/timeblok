@@ -1,8 +1,8 @@
 #[cfg(not(target_family = "wasm"))]
 mod workalendar;
 
-use std::fs::File;
-use std::io::Read;
+
+
 use std::rc::Rc;
 
 use crate::environment::Environment;
@@ -14,10 +14,9 @@ use crate::ir::{Date, ExactDate, Value};
 use crate::resolver::{resolve_date, ResolverAction};
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Weekday};
-use icalendar::Calendar;
-#[cfg(not(target_family = "wasm"))]
-use crate::utils::{download_file, get_dir};
-use std::str::FromStr;
+
+
+
 
 #[cfg(not(target_family = "wasm"))]
 use self::workalendar::{get_holiday, get_workdays};
@@ -40,7 +39,7 @@ fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&E
 }
 
 fn insert_timezone(env: &mut Environment) -> Result<()> {
-    let fnc = Rc::new(|env: &Environment, x: &CommandCall| {
+    let fnc = Rc::new(|_env: &Environment, x: &CommandCall| {
         if let Ok(tz) = dateparser::timezone::parse(x.plain.as_str()){
             Ok(Some(vec![ResolverAction::SetTimeZone(
                 crate::ir::TimeZoneChoice::Offset(tz))
@@ -205,7 +204,7 @@ fn insert_commands(env: &mut Environment) -> Result<()> {
     )?;
 
     // todo function
-    insert_command(env, "t", 0, Rc::new(|env: &Environment, x: &CommandCall|{
+    insert_command(env, "t", 0, Rc::new(|_env: &Environment, x: &CommandCall|{
         Ok(Some(vec![ResolverAction::InsertTodo(Todo::from_string(x.plain.clone())?)]))
     }))?;
 

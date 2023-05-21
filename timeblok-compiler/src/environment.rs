@@ -160,6 +160,7 @@ impl Environment {
     }
 }
 
+#[cfg(test)]
 mod tests {
 
     #[test]

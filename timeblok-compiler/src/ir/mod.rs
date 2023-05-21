@@ -1,5 +1,5 @@
 use crate::ir::filter::{Filter, BDF};
-use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, NaiveWeek, Timelike, Utc};
+use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use icalendar::{CalendarDateTime, DatePerhapsTime, Component};
 use anyhow::Result;
 
@@ -317,7 +317,7 @@ impl ExactDateTime {
                     tz: TimeZoneChoice::Utc,
                     ..Self::from_naive(x.naive_utc())
                 },
-                CalendarDateTime::WithTimezone {date_time, tzid: tz} => {
+                CalendarDateTime::WithTimezone {date_time, tzid: _tz} => {
                     Self::from_naive(date_time)
                 }
             }
@@ -411,7 +411,7 @@ impl Todo{
         }
         tod.status(self.status);
         if let Some(k) = key {
-            tod.uid(&k.as_str());
+            tod.uid(k.as_str());
         }
         if let Some(dt)=tsmp{
             tod.timestamp(dt);
