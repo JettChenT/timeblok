@@ -1,0 +1,30 @@
+---
+source: timeblok-compiler/src/tests/tests.rs
+expression: "compile_deterministic(&input,\n        ExactDateTime::from_ymd_hms(2023, 1, 1, 0, 0, 0).clone()).unwrap()"
+input_file: timeblok-compiler/src/tests/bloks/notes.tb
+---
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:ICALENDAR-RS
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+DESCRIPTION:- this is a sample note\n- some other notes\n
+DTEND:20230606T013000Z
+DTSTAMP:20221231T160000Z
+DTSTART:20230606T010000Z
+LOCATION:Shanghai
+SUMMARY:wake up
+UID:c8e1eb22-a627-3daa-884c-2205cf78d075
+URL:https://jettchen.me
+END:VEVENT
+BEGIN:VEVENT
+DESCRIPTION:- yay\n- nay\n
+DTEND:20230606T023000Z
+DTSTAMP:20221231T160000Z
+DTSTART:20230606T020000Z
+SUMMARY:some other stuff
+UID:9311744c-3746-3502-84c9-d06e8b5ea2d6
+URL:https://stuff.com
+END:VEVENT
+END:VCALENDAR
+
