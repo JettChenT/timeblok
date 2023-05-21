@@ -1778,7 +1778,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok"
-version = "0.4.5"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1806,7 +1806,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok-cli"
-version = "0.4.5"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1819,7 +1819,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok-js"
-version = "0.4.5"
+version = "0.5.0"
 dependencies = [
  "console_error_panic_hook",
  "timeblok",
@@ -1830,7 +1830,7 @@ dependencies = [
 
 [[package]]
 name = "timeblok-py"
-version = "0.4.5"
+version = "0.5.0"
 dependencies = [
  "pyo3",
  "timeblok",
