@@ -107,26 +107,44 @@ fn parse_command(pair: Pair<Rule>) -> Result<CommandCall> {
     let mut args = vec![];
     while argpairs.peek().is_some() {
         let nxt = get_next!(argpairs);
-        let res = match nxt.as_rule() {
-            Rule::FILTER => Value::NumFilter(parse_num_filter(nxt)?),
-            Rule::DATE_FILTER => Value::DateFilter(parse_date_filter(nxt)?),
-            Rule::IDENT => Value::Ident(parse_ident(nxt)?),
-            Rule::NUM_FIELD => Value::Num(parse_numval(nxt)?),
+        match nxt.as_rule() {
             Rule::EOI => {break;}
-            Rule::CARG => Value::String(nxt.as_str().to_string()),
-            Rule::STRING => Value::String(nxt.as_str().to_string()),
-            r => {
-                eprintln!("unexpected rule: {:?}", r);
-                unreachable!()
-            },
-        };
-        args.push(res);
+            _ => {
+                let res = parse_value(nxt)?;
+                args.push(res);
+            }
+        }
     }
     Ok(CommandCall {
         command: command.as_str().to_string(),
         args,
         plain: s.to_string(),
     })
+}
+
+fn parse_property(pair: Pair<Rule>) -> Result<Property> {
+    let mut pairs = pair.into_inner();
+    let name = get_next!(pairs);
+    let value = get_next!(pairs);
+    let data = parse_value(value)?;
+    Ok(Property {
+        name: name.as_str().to_string(),
+        data
+    })
+}
+
+fn parse_value(pair: Pair<Rule>) -> Result<Value> {
+    match pair.as_rule() {
+        Rule::FILTER => Ok(Value::NumFilter(parse_num_filter(pair)?)),
+        Rule::DATE_FILTER => Ok(Value::DateFilter(parse_date_filter(pair)?)),
+        Rule::IDENT => Ok(Value::Ident(parse_ident(pair)?)),
+        Rule::NUM_FIELD => Ok(Value::Num(parse_numval(pair)?)),
+        Rule::CARG | Rule::STRING => Ok(Value::String(pair.as_str().to_string())),
+        r => {
+            eprintln!("unexpected rule: {:?}", r);
+            unreachable!()
+        },
+    }
 }
 
 fn parse_occasion(pair: Pair<Rule>) -> Result<DateTime> {
@@ -213,9 +231,8 @@ pub fn parse_event(pair: Pair<Rule>) -> Result<Event> {
     };
     if pairs.peek().is_some() {
         // Assuming that all stuff are notes for now...
-        let notes = parse_notes(&mut pairs);
-        let descriptions = notes.join("\n");
-        event.notes = Some(descriptions);
+        let notes = parse_notes(&mut pairs)?;
+        event.notes = Some(notes);
     }
     Ok(event)
 }
@@ -224,12 +241,28 @@ fn parse_note(pair: Pair<Rule>) -> &str {
     pair.as_str()
 }
 
-fn parse_notes(pairs: &mut Pairs<Rule>) -> Vec<String> {
-    let mut notes = vec![];
+fn parse_notes(pairs: &mut Pairs<Rule>) -> Result<Notes> {
+    let mut description = String::new();
+    let mut properties = vec![];
     for note in pairs {
-        notes.push(parse_note(note).to_string());
+        match note.as_rule() {
+            Rule::PROPERTY => {
+                properties.push(parse_property(note).unwrap());
+            }
+            Rule::NOTE_LINE => {
+                description.push_str(parse_note(note));
+                description.push('\n');
+            }
+            _ => {
+                eprintln!("unexpected rule: {:?}", note.as_rule());
+                unreachable!()
+            }
+        }
     }
-    notes
+    Ok(Notes{
+        description,
+        properties,
+    })
 }
 
 fn parse_event_header(pair: Pair<Rule>) -> Result<Event> {

@@ -93,7 +93,10 @@ impl ExactEvent {
         let mut calevent = ical::Event::new();
         calevent.summary(self.name.as_str());
         if let Some(notes) = self.notes.as_ref() {
-            calevent.description(notes.as_str());
+            calevent.description(notes.description.as_str());
+            for prop in notes.properties.iter() {
+                calevent.add_property(prop.name.to_uppercase().as_str(), prop.data.as_str());
+            }
         }
         if let Some(s) = key {
             calevent.uid(Uuid::new_v3(&Uuid::NAMESPACE_URL, s.as_bytes()).to_string().as_str());

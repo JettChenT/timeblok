@@ -134,14 +134,38 @@ pub struct ExactTime {
 pub struct Event {
     pub range: Range,
     pub name: String,
-    pub notes: Option<String>,
+    pub notes: Option<Notes>,
 }
 
 #[derive(Debug)]
 pub struct ExactEvent {
     pub range: ExactRange,
     pub name: String,
-    pub notes: Option<String>,
+    pub notes: Option<ExactNotes>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Property{
+    pub name: String,
+    pub data: Value
+}
+
+#[derive(Debug, Clone)]
+pub struct ExactProperty{
+    pub name: String,
+    pub data: String
+}
+
+#[derive(Debug, Clone)]
+pub struct Notes{
+    pub description: String,
+    pub properties: Vec<Property> 
+}
+
+#[derive(Debug, Clone)]
+pub struct ExactNotes{
+    pub description: String,
+    pub properties: Vec<ExactProperty> 
 }
 
 #[derive(Debug)]

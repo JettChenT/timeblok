@@ -228,7 +228,38 @@ pub fn resolve_event(event: &Event, base: &Environment) -> Result<ExactEvent> {
     Ok(ExactEvent {
         range: resolve_range(&event.range, base)?,
         name: event.name.clone(),
-        notes: event.notes.clone(),
+        notes: match &event.notes{
+            Some(n) => Some(resolve_notes(n, base)?),
+            None => None
+        }
+    })
+}
+
+pub fn resolve_notes(notes: &Notes, base: &Environment) -> Result<ExactNotes> {
+    let mut properties:Vec<ExactProperty> = vec![];
+    for prop in &notes.properties {
+        properties.push(resolve_property(prop, base)?);
+    }
+    Ok(ExactNotes {
+        description: notes.description.clone(),
+        properties
+    })
+}
+
+pub fn resolve_property(property: &Property, base: &Environment) -> Result<ExactProperty> {
+    let data: String = match &property.data {
+        Value::Date(date) => {
+            let date = resolve_date(&date, base)?;
+            // format date into YYYYMMDD
+            format!("{}{:02}{:02}", date.year, date.month, date.day)
+        },
+        Value::Num(Number(n)) => n.to_string(),
+        Value::String(s) => s.to_owned(),
+        _ => return Err(anyhow!("Invalid property data type")),
+    };
+    Ok(ExactProperty {
+        name: property.name.clone(),
+        data
     })
 }
 
