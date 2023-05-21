@@ -249,7 +249,7 @@ fn parse_notes(pairs: &mut Pairs<Rule>) -> Result<Notes> {
             Rule::PROPERTY => {
                 properties.push(parse_property(note).unwrap());
             }
-            Rule::NOTE_LINE => {
+            Rule::NOTE => {
                 description.push_str(parse_note(note));
                 description.push('\n');
             }

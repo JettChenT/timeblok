@@ -255,6 +255,7 @@ pub fn resolve_property(property: &Property, base: &Environment) -> Result<Exact
         },
         Value::Num(Number(n)) => n.to_string(),
         Value::String(s) => s.to_owned(),
+        Value::Ident(ident) => ident.name.clone(),
         _ => return Err(anyhow!("Invalid property data type")),
     };
     Ok(ExactProperty {
