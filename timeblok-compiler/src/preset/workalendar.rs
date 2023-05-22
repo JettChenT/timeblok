@@ -37,7 +37,7 @@ pub fn get_workdays(country: &String, new: bool) -> Result<Vec<NaiveDate>> {
     Ok(res)
 }
 
-fn download_holiday(country: &String) -> Result<()> {
+fn download_holiday(country: &str) -> Result<()> {
     let url = Url::parse(
         format!(
             "https://raw.githubusercontent.com/JettChenT/workalendar-hub/main/holidays-ics/{}.ics",
@@ -60,7 +60,7 @@ fn download_holiday(country: &String) -> Result<()> {
     Ok(())
 }
 
-pub fn get_holiday(country: &String, new: bool) -> Result<Calendar> {
+pub fn get_holiday(country: &str, new: bool) -> Result<Calendar> {
     let fpath = get_dir(Dirs::Cache, Some("ics"))?.join(format!("{}.ics", country));
     if new || !fpath.exists() {
         download_holiday(country)?;
@@ -79,13 +79,13 @@ mod tests {
     use super::*;
     #[test]
     fn test_get_holiday() -> Result<()> {
-        let _cal = get_holiday(&"US".to_string(), true)?;
+        let _cal = get_holiday("US", false)?;
         Ok(())
     }
 
     #[test]
     fn test_empty_holiday() -> Result<()> {
-        assert!(get_holiday(&"XX".to_string(), true).is_err());
+        assert!(get_holiday("XX", true).is_err());
         Ok(())
     }
 }

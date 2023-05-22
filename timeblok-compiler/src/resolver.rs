@@ -10,6 +10,7 @@ use crate::ir::ident::{Ident, IdentData};
 use crate::ir::Todo;
 
 // TODO: Change all resolve to Result<> based
+// TODO: Use a struct to represent the resolver state.
 
 pub enum ResolverAction {
     Set(Ident, IdentData),

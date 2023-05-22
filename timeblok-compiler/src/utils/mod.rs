@@ -69,9 +69,9 @@ pub enum Dirs{
 pub fn get_dir(dir: Dirs, subdir: Option<&str>) -> Result<PathBuf> {
     use Dirs::*;
     let pd = ProjectDirs::from("", "", "timeblok")
-        .ok_or(anyhow!("project directory not found"))?;
+        .ok_or_else(|| anyhow!("project directory not found"))?;
     let bd = BaseDirs::new()
-        .ok_or(anyhow!("base directory not found"))?;
+        .ok_or_else(|| anyhow!("base directory not found"))?;
 
     let mut path = match dir {
         Project => pd.project_path(),
