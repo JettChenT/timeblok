@@ -8,8 +8,10 @@ use std::rc::Rc;
 use super::command::Command;
 use super::Value;
 
+type FiltFn<T> = Rc<dyn Fn(&T, Option<&Environment>) -> bool>;
+
 pub struct DynFilter<T> {
-    pub filter: Rc<dyn Fn(&T, Option<&Environment>) -> bool>,
+    pub filter: FiltFn<T>,
     pub name: String,
 }
 

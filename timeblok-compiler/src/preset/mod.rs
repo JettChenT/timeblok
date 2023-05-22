@@ -7,7 +7,7 @@ use std::rc::Rc;
 
 use crate::environment::Environment;
 use crate::importer::{ics_to_records, import_ics, SetFilter};
-use crate::ir::command::{Command, CommandRes, CommandCall};
+use crate::ir::command::{Command, CommandRes, CommandCall, CmdFn};
 use crate::ir::filter::ExcludeFilt;
 use crate::ir::ident::{DynFilter, IdentData};
 use crate::ir::{Date, ExactDate, Value};
@@ -27,7 +27,7 @@ impl ExactDate {
     }
 }
 
-fn insert_command(env: &Environment, name:&str, arity: usize, func: Rc<dyn Fn(&Environment, &CommandCall) -> Result<CommandRes>>) -> Result<()> {
+fn insert_command(env: &Environment, name:&str, arity: usize, func: CmdFn) -> Result<()> {
     env.set(
         name,
         IdentData::Command(Command{

@@ -4,7 +4,7 @@ use std::path::PathBuf;
 #[cfg(not(target_family = "wasm"))]
 use reqwest::Url;
 use anyhow::{anyhow, Result};
-use directories::ProjectDirs;
+use directories::{ProjectDirs, BaseDirs, UserDirs};
 
 use crate::ir::{ExactDateTime, ExactDate, ExactTime, TimeZoneChoice};
 use std::time::SystemTime;
@@ -66,14 +66,23 @@ pub enum Dirs{
 
 // TODO: update this to match wasm implementation
 #[cfg(not(target_family = "wasm"))]
-pub fn get_dir() -> Result<PathBuf> {
-    if let Some(dir) = ProjectDirs::from("", "", "timeblok") {
-        let data_dir = dir.data_dir().join("workalendar");
-        create_dir_all(&data_dir)?;
-        Ok(data_dir)
-    } else {
-        Err(anyhow!("Cannot find project directory"))
+pub fn get_dir(dir: Dirs, subdir: Option<&str>) -> Result<PathBuf> {
+    use Dirs::*;
+    let pd = ProjectDirs::from("", "", "timeblok")
+        .ok_or(anyhow!("project directory not found"))?;
+    let bd = BaseDirs::new()
+        .ok_or(anyhow!("base directory not found"))?;
+
+    let mut path = match dir {
+        Project => pd.project_path(),
+        Data => pd.data_dir(),
+        Cache => pd.cache_dir(),
+        Base => bd.home_dir()
+    }.to_path_buf();
+    if let Some(subdir) = subdir {
+        path.push(subdir);
     }
+    Ok(path)
 }
 
 #[cfg(target_family = "wasm")]

@@ -80,11 +80,7 @@ impl Filter<NumVal> for NumRange {
 
 impl Filter<NumVal> for NumVal {
     fn check(&self, value: &NumVal, _env: Option<&Environment>) -> bool {
-        if matches!(self, Unsure) {
-            true
-        } else {
-            self == value
-        }
+        matches!(self, Unsure) || self==value
     }
 }
 
@@ -105,7 +101,6 @@ impl Filter<ExactDate> for ExactRange {
 
 impl Filter<Date> for Range {
     fn check(&self, value: &Date, env: Option<&Environment>) -> bool {
-        // TODO: Change Resolving to Environment based
         let exact_range = resolve_range(self, env.unwrap()).unwrap();
         let exact_date = resolve_date(value, env.unwrap()).unwrap();
         exact_range.check(&exact_date, env)

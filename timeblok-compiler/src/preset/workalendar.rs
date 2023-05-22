@@ -8,19 +8,19 @@ use std::str::FromStr;
 use std::{fs, fs::File, io::Read};
 
 use reqwest::Url;
-use crate::utils::{download_file, get_dir};
+use crate::utils::{download_file, get_dir, Dirs};
 
 fn download_workdays(country: &String) -> Result<()> {
     let url = format!(
             "https://raw.githubusercontent.com/JettChenT/workalendar-hub/main/workingdays/{}.txt",
             country
     );
-    let dest = get_dir()?.join("workdays").join(format!("{}.txt", country));
+    let dest = get_dir(Dirs::Data, Some("workdays"))?.join(format!("{}.txt", country));
     download_file(&url, dest, Some(format!("{} calendar", country).as_str()))
 }
 
 pub fn get_workdays(country: &String, new: bool) -> Result<Vec<NaiveDate>> {
-    let fpath = get_dir()?.join("workdays").join(format!("{}.txt", country));
+    let fpath = get_dir(Dirs::Data, Some("workdays"))?.join(format!("{}.txt", country));
     if new || !fpath.exists() {
         download_workdays(country)?;
     }
@@ -51,7 +51,7 @@ fn download_holiday(country: &String) -> Result<()> {
         return Err(anyhow!("Cannot download calendar: {}", response.text()?));
     }
     let dest = {
-        let fpath = get_dir()?.join(format!("{}.ics", country));
+        let fpath = get_dir(Dirs::Cache, Some("ics"))?.join(format!("{}.ics", country));
         File::create(&fpath)?;
         fpath
     };
@@ -61,7 +61,7 @@ fn download_holiday(country: &String) -> Result<()> {
 }
 
 pub fn get_holiday(country: &String, new: bool) -> Result<Calendar> {
-    let fpath = get_dir()?.join(format!("{}.ics", country));
+    let fpath = get_dir(Dirs::Cache, Some("ics"))?.join(format!("{}.ics", country));
     if new || !fpath.exists() {
         download_holiday(country)?;
     }

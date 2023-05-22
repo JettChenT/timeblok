@@ -8,13 +8,14 @@ use crate::resolver::ResolverAction;
 use super::{ident::IdentData, Value};
 
 pub type CommandRes = Option<Vec<ResolverAction>>;
+pub type CmdFn = Rc<dyn Fn(&Environment, &CommandCall) -> Result<CommandRes>>;
 
 #[derive(Clone)]
 pub struct Command {
     pub name: String,
     // An arity of 0 allows for an arbitrary amount of arguments
     pub arity: usize,
-    pub func: Rc<dyn Fn(&Environment, &CommandCall) -> Result<CommandRes>>,
+    pub func: CmdFn,
 }
 
 impl Debug for Command {

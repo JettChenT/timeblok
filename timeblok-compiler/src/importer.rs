@@ -11,7 +11,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use icalendar::{Calendar, Component};
-use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTimeRange, Todo, ExactNotes};
+use crate::ir::{ExactDateTime, ExactEvent, ExactRange, ExactRecord, ExactTimeRange, Todo, ExactNotes, ExactProperty};
 use anyhow::{Result, anyhow};
 use crate::utils::get_dir;
 #[cfg(not(target_family = "wasm"))]
@@ -69,8 +69,10 @@ impl SetFilter {
 
 #[cfg(not(target_family = "wasm"))]
 pub fn import_ics(url: &String) -> Result<Calendar>{
+    use crate::utils::Dirs;
+
     let contents = if url.starts_with("http"){
-        let loc = get_dir()?.join("ics").join(url);
+        let loc = get_dir(Dirs::Cache, Some(&"ics".to_string()))?.join(url);
         download_file(url, loc.clone(), None)?;
         let mut contents = String::new();
         File::open(loc)?.read_to_string(&mut contents)?;
@@ -117,14 +119,21 @@ pub fn ics_to_records(cal: &Calendar) -> Vec<ExactRecord>{
                 }
                 (_, _) => {continue;}
             };
+            let description = event.get_description().map(|s| s.to_string());
+            let properties:Vec<ExactProperty> = event
+                .properties()
+                .iter()
+                .map(|(_,v)|
+                    {ExactProperty{name:v.key().to_string(), data:v.value().to_string()}}
+                ).collect();
             records.push(ExactRecord::Event(ExactEvent{
                 range,
                 name: event.get_summary().unwrap_or("").to_string(),
-                notes: event.get_description().map(|s| ExactNotes{
-                        description: s.to_string(),
-                        properties: vec![], // TODO: add properties
-                    })
-            }))
+                notes: Some(ExactNotes{
+                    description:description.unwrap_or_default(),
+                    properties
+                })})
+            )
         }
         if let Some(td) = c.as_todo(){
             records.push(ExactRecord::Todo(Todo{
